@@ -5,16 +5,14 @@ city_list = {'bath';'bristol';'cambridge';'cheltenham';'coventry';'derby';'glasg
     'leeds';'liverpool';'livingston';'manchester';'newcastle';'norwich';'sheffield';...
     'southampton';'plymouth';'preston';'wakefield';'walsall';'wolverhampton';'york';...
     'nottingham';'leicester';'cardiff';'belfast';'brighton';'aberdeen';'inverness';...
-    'durham';'birmingham';'dublin';'lyon';'helsinki';'berlin';'amsterdam';'madrid';...
-    'vienna';'athens';'prague';'milan';'miami';'dallas';'atlanta';'chicago';'columbus';...
-    'calgary';'edmonton';'ottawa';'montreal';'vancouver'};
+    'durham';'birmingham';'dublin';'lyon';'helsinki';'berlin';'amsterdam';'madri'};
 dataset = struct();
 sum = 0;
 for i=1:size(city_list, 1)
     data = city_list{i,1};
     load(['features/','BSD','/','BSD','_', data,'_10_19','.mat']);
     dataset(i).city = data;
-    dataset(i).total = size(routes,2)*2;
+    dataset(i).total = size(routes,2);
     
     dataset(i).front_juncs = 0;
     dataset(i).front_nonjuncs = 0;
@@ -54,7 +52,7 @@ for i=1:size(city_list, 1)
             dataset(i).left_nongaps =  dataset(i).left_nongaps+1;
         end               
     end
-    sum = dataset(i).total + sum; 
+    sum = dataset(i).total*2 + sum; 
     
 end
 save('dataset.mat','dataset');
