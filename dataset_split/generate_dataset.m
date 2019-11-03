@@ -37,11 +37,18 @@ for i=1:length(city_list)
     nongaps_test_num = 0;
     
     load(['features/','BSD','/','BSD','_',city,'_10_19','.mat']);
-    %filepath = ['images/Images/','BSD','_',city,'_10_19', '/', 'snaps/'];
-    filepath = 'images/snaps/';
+    filepath = ['images/Images/',city,'_10_19', '/', 'snaps/'];
+    panoidAll = {'start'};
     for j=1:length(routes)
         desc = routes(j).BSDs;
         id = routes(j).id;
+        Lia = ismember(panoidAll, id);
+        if (sum(Lia) > 0)
+            continue;
+        else
+            panoidAll{end+1} = id; 
+        end
+        
         img_f = imread([filepath, id, '_front.jpg']);
         img_b = imread([filepath, id, '_back.jpg']);
         img_l = imread([filepath, id, '_left.jpg']);

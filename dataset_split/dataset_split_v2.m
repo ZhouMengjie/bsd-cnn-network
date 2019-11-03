@@ -4,11 +4,11 @@
 % test - junctions:14393 * 2, gaps: 12155 * 2
 clear all
 load('dataset.mat');
-train_junctions = 190000;
-train_gaps = 200000;
+train_junctions = 175000;
+train_gaps = 190000;
 
-test_junctions = 14393;
-test_gaps = 12155;
+test_junctions = 9490;
+test_gaps = 11473;
 
 % just for re-check
 junctions_train_total = 0;
