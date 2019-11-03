@@ -10,7 +10,7 @@ city_list = {'bath';'bristol';'cambridge';'cheltenham';'coventry';'derby';'glasg
     'calgary';'edmonton';'ottawa';'montreal';'vancouver'};
 dataset = struct();
 dataset_general = struct();
-sum = 0;
+total = 0;
 sum_gaps = 0;
 sum_nongaps = 0;
 sum_juncs = 0;
@@ -79,12 +79,12 @@ for i=1:size(city_list, 1)
         end               
     end
     dataset_general(i).city = city;
-    dataset_general(i).total = size(routes,2)*2;
     dataset_general(i).juncs = dataset(i).front_juncs + dataset(i).back_juncs;
     dataset_general(i).nonjuncs = dataset(i).front_nonjuncs + dataset(i).back_nonjuncs;
     dataset_general(i).gaps = dataset(i).left_gaps + dataset(i).right_gaps;
     dataset_general(i).nongaps = dataset(i).left_nongaps + dataset(i).right_nongaps;
-    total = dataset(i).total + total; 
+    dataset_general(i).total = dataset_general(i).juncs + dataset_general(i).nonjuncs;
+    total = total + dataset_general(i).total;
     sum_juncs = sum_juncs + dataset_general(i).juncs;
     sum_nonjuncs = sum_nonjuncs + dataset_general(i).nonjuncs;
     sum_gaps = sum_gaps + dataset_general(i).gaps;
