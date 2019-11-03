@@ -29,10 +29,10 @@ for i=1:length(dataset_general)
     set_split(i).junctions_test = ceil(dataset_general(i).juncs / sum_juncs * test_junctions);   
     set_split(i).nonjunctions_test = ceil(dataset_general(i).nonjuncs / sum_nonjuncs * test_junctions);
     
-    set_split(i).gaps_train = ceil(dataset_general(i).juncs / sum_juncs * train_gaps);   
-    set_split(i).nongaps_train = ceil(dataset_general(i).nonjuncs / sum_nonjuncs * train_gaps);    
-    set_split(i).gaps_test = ceil(dataset_general(i).juncs / sum_juncs * test_gaps);   
-    set_split(i).nongaps_test = ceil(dataset_general(i).nonjuncs / sum_nonjuncs * test_gaps); 
+    set_split(i).gaps_train = ceil(dataset_general(i).gaps / sum_gaps * train_gaps);   
+    set_split(i).nongaps_train = ceil(dataset_general(i).nongaps / sum_nongaps * train_gaps);    
+    set_split(i).gaps_test = ceil(dataset_general(i).gaps / sum_gaps * test_gaps);   
+    set_split(i).nongaps_test = ceil(dataset_general(i).nongaps / sum_nongaps * test_gaps); 
     
     junctions_train_total = junctions_train_total + set_split(i).junctions_train;
     nonjunctions_train_total = nonjunctions_train_total + set_split(i).nonjunctions_train;

@@ -16,9 +16,11 @@ sum_nongaps = 0;
 sum_juncs = 0;
 sum_nonjuncs = 0;
 for i=1:size(city_list, 1)
-    data = city_list{i,1};
-    load(['features/','BSD','/','BSD','_', data,'_10_19','.mat']);
-    dataset(i).city = data;
+    city = city_list{i,1};
+    load(['features/','BSD','/','BSD','_', city,'_10_19','.mat']);
+    filepath = ['images/Images/',city,'_10_19', '/', 'snaps/'];
+    
+    dataset(i).city = city;
     dataset(i).total = size(routes,2)*2;
     
     dataset(i).front_juncs = 0;
@@ -33,9 +35,25 @@ for i=1:size(city_list, 1)
     dataset(i).left_gaps = 0;
     dataset(i).left_nongaps = 0;
     
-    
+    panoidAll = {'start'};
     for j=1:length(routes)
         desc = routes(j).BSDs;
+        id = routes(j).id;
+        
+        % whether the image exisits
+        file = [filepath, id, '_front.jpg'];        
+        if ~exist(file,'file')
+            continue; 
+        end        
+        
+        Lia = ismember(panoidAll, id);
+        if (sum(Lia) > 0)
+            continue;
+        else
+            panoidAll{end+1} = id; 
+        end
+            
+        
         if desc(1) == 1
             dataset(i).front_juncs = dataset(i).front_juncs+1;
         else
@@ -60,13 +78,13 @@ for i=1:size(city_list, 1)
             dataset(i).left_nongaps =  dataset(i).left_nongaps+1;
         end               
     end
-    dataset_general(i).city = data;
+    dataset_general(i).city = city;
     dataset_general(i).total = size(routes,2)*2;
     dataset_general(i).juncs = dataset(i).front_juncs + dataset(i).back_juncs;
     dataset_general(i).nonjuncs = dataset(i).front_nonjuncs + dataset(i).back_nonjuncs;
     dataset_general(i).gaps = dataset(i).left_gaps + dataset(i).right_gaps;
     dataset_general(i).nongaps = dataset(i).left_nongaps + dataset(i).right_nongaps;
-    sum = dataset(i).total + sum; 
+    total = dataset(i).total + total; 
     sum_juncs = sum_juncs + dataset_general(i).juncs;
     sum_nonjuncs = sum_nonjuncs + dataset_general(i).nonjuncs;
     sum_gaps = sum_gaps + dataset_general(i).gaps;
@@ -74,6 +92,6 @@ for i=1:size(city_list, 1)
     
 end
 save('dataset.mat',  '-v7.3')
-p = ['there are', ' ', num2str(sum), ' in total for each category'];
+p = ['there are', ' ', num2str(total), ' in total for each category'];
 disp(p)
 
