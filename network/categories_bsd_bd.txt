@@ -1,0 +1,2 @@
+/n/non_gaps 0
+/g/gaps 1

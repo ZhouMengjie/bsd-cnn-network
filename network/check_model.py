@@ -12,8 +12,6 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-
-import wideresnet
 import pdb
 
 model_names = sorted(name for name in models.__dict__
@@ -55,7 +53,6 @@ best_prec1 = 0
 args = parser.parse_args()
 print(args)
 
-'''
 # load the pre-trained weights
 model_file = '%s_places365.pth.tar' % args.arch
 if not os.access(model_file, os.W_OK):
@@ -71,31 +68,6 @@ state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.
 model.load_state_dict(state_dict, strict=False)
 # model = torch.nn.DataParallel(model).cuda()
 print(model) 
-'''   
+  
 
-# Data loading code
-data = 'places365_standard'
-traindir = os.path.join(data, 'train')
-valdir = os.path.join(data, 'val')
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
 
-train_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder(traindir, transforms.Compose([
-        transforms.RandomSizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        normalize,
-    ])),
-    batch_size=args.batch_size, shuffle=True,
-    num_workers=args.workers, pin_memory=True)
-
-val_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder(valdir, transforms.Compose([
-        transforms.Scale(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        normalize,
-    ])),
-    batch_size=args.batch_size, shuffle=False,
-    num_workers=args.workers, pin_memory=True)

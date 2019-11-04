@@ -1,7 +1,3 @@
-# PlacesCNN for scene classification
-#
-# by Bolei Zhou
-# last modified by Bolei Zhou, Dec.27, 2017 with latest pytorch and torchvision (upgrade your torchvision please if there is trn.Resize error)
 
 '''
  @article{zhou2017places,
@@ -23,7 +19,7 @@ import os
 from PIL import Image
 
 # th architecture to use
-arch = 'resnet50'
+arch = 'resnet18'
 
 # load the pre-trained weights 
 model_file = '%s_places365.pth.tar' % arch
@@ -31,8 +27,8 @@ if not os.access(model_file, os.W_OK):
     weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
     os.system('wget ' + weight_url)
 
-model = models.__dict__[arch](num_classes=365)
-checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # GPU to CPU
+model = models.__dict__[arch](num_classes=2)
+checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
 state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
 model.load_state_dict(state_dict)
 model.eval()
