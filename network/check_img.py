@@ -27,7 +27,7 @@ def imshow(inp, title=None):
     plt.imshow(inp)
     if title is not None:
         plt.title(title)
-    plt.pause(10)  # pause a bit so that plots are updated
+    plt.pause(60)  # pause a bit so that plots are updated
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -84,14 +84,21 @@ train_loader = {x: torch.utils.data.DataLoader(image_datasets[x],
               for x in ['train']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train']}
 class_names = image_datasets['train'].classes
+img_paths = image_datasets['train'].imgs
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Get a batch of training data
-inputs, classes = next(iter(train_loader['train']))
-
+# inputs, targets = next(iter(train_loader['train']))
 # Make a grid from batch
-out = torchvision.utils.make_grid(inputs)
-imshow(out, title=[class_names[x] for x in classes])
+# out = torchvision.utils.make_grid(inputs)
+# imshow(out, title=[class_names[x] for x in targets])
+
+for i, (input, target) in enumerate(image_datasets['train']):
+    out = torchvision.utils.make_grid(input)
+    # print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
+    print(img_paths[i])
+    # imshow(out, title=[class_names[x] for x in target]) 
+    imshow(out, title=[class_names[target]])   
 
 
