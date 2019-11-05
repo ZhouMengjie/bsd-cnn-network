@@ -27,7 +27,7 @@ def imshow(inp, title=None):
     plt.imshow(inp)
     if title is not None:
         plt.title(title)
-    plt.pause(60)  # pause a bit so that plots are updated
+    plt.pause(10)  # pause a bit so that plots are updated
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -67,8 +67,8 @@ args = parser.parse_args()
 # Data loading code
 data_transforms = {
     'train': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomResizedCrop(224),
+        #transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
