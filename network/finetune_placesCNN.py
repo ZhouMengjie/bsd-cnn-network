@@ -39,13 +39,13 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
-parser.add_argument('-j', '--workers', default=6, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=4, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
@@ -64,7 +64,7 @@ parser.add_argument('--pretrained', dest='pretrained', action='store_false',
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--dataset',default='places365',help='which dataset to train')
 
-best_loss = 100
+best_loss = 1000
 
 
 def main():
@@ -85,7 +85,7 @@ def main():
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)
     model = torch.nn.DataParallel(model).cuda()
-    print(model) 
+    # print(model) 
 
 
     # optionally resume from a checkpoint
