@@ -74,7 +74,7 @@ data_transforms = {
     ]),
 }
 
-data_dir = 'data/hymenoptera_data'
+data_dir = 'data/GAPS'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in ['train']}
@@ -87,13 +87,11 @@ class_names = image_datasets['train'].classes
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-
 # Get a batch of training data
 inputs, classes = next(iter(train_loader['train']))
 
 # Make a grid from batch
 out = torchvision.utils.make_grid(inputs)
-
 imshow(out, title=[class_names[x] for x in classes])
 
 
