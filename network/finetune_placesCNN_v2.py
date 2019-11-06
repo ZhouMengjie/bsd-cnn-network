@@ -26,7 +26,8 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 
 import pdb
-import logger
+from torch.utils.tensorboard import SummaryWriter
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -68,9 +69,9 @@ parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 parser.add_argument('--dataset',default='places365',help='which dataset to train')
 
-best_loss = 1000
 step = 0
 num_save = 0
+writer = SummaryWriter('runs/bsd_experiment')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -80,9 +81,10 @@ else:
 
 
 def main():
-    global args, best_loss, device, step, num_save
+    global args, best_loss, device, step, num_sav, writer
     args = parser.parse_args()
     print(args)
+
 
     # load the pre-trained weights
     model_file = '%s_places365.pth.tar' % args.arch
@@ -96,6 +98,7 @@ def main():
     state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)
+    writer.add_graph(model)
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
@@ -142,30 +145,12 @@ def main():
                                 weight_decay=args.weight_decay)
 
     # set tf logger for tensorboard
-    tf_logger = Logger(os.path.join(sys.path[0]+'/tensorboard/'))
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        loss = train(train_loader, model, criterion, optimizer, epoch)
-
-        # remember best prec@1 and save checkpoint
-        is_best = loss < best_loss
-        best_loss = min(loss, best_loss)
-        
-        if step % args.check_interval == 0:
-            num_save += 1
-            save_checkpoint({
-               'epoch': epoch + 1,
-               'arch': args.arch,
-              'state_dict': model.state_dict(),
-              'best_loss': best_loss,
-            }, is_best, ['net',str(num_save)])
-            if num_save == 5:
-                num_save = 0
-
-
-
+        train(train_loader, model, criterion, optimizer, epoch)
+       
 def train(train_loader, model, criterion, optimizer, epoch):
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -211,18 +196,24 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1))
-
-        tf_logger.scalar_summary("loss", losses.avg, step)
-        tf_logger.scalar_summary("accs", prec1.avg, step)
         step += 1 
+        '''
+        writer.add_scalar('traning loss', losses.avg, step)
+        writer.add_scalar('traning accuracy', top1.avg, step)
+        '''
+        if step % args.check_interval == 0:
+            num_save += 1
+            save_checkpoint({
+                'epoch': epoch,
+                'arch': args.arch,
+                'state_dict': model.state_dict(),
+            }, ['net',str(num_save)])
+            if num_save == 5:
+                num_save = 0
 
-    return losses.avg
 
-
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, filename='checkpoint.pth.tar'):
     torch.save(state, filename + '_latest.pth.tar')
-    if is_best:
-        shutil.copyfile(filename + '_latest.pth.tar', args.arch.lower() + '_best.pth.tar')
 
 
 class AverageMeter(object):
