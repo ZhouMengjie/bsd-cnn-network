@@ -32,7 +32,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 
-parser = argparse.ArgumentParser(description='PyTorch Places365 Training')
+parser = argparse.ArgumentParser(description='PyTorch BSD Training')
 parser.add_argument('data', metavar='DIR',
                     help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
@@ -41,13 +41,13 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=25, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=4, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -62,13 +62,25 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
+parser.add_argument('--check_interval', default=500, type=int, metavar='N',
+                    help='interval of each checkpoint')
+parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
+                    help='number of saved checkpoints')
 parser.add_argument('--dataset',default='places365',help='which dataset to train')
 
 best_loss = 1000
+step = 0
+num_save = 0
+if torch.cuda.is_available():
+    device = torch.device('cuda:0')
+    torch.backends.cudnn.benchmark = True
+else:
+    device = torch.device('cpu')
+
 
 
 def main():
-    global args, best_loss
+    global args, best_loss, device, step, num_save
     args = parser.parse_args()
     print(args)
 
@@ -84,8 +96,12 @@ def main():
     state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)
-    model = torch.nn.DataParallel(model).cuda()
-    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+
+    model = model.to(device)
 
 
     # optionally resume from a checkpoint
@@ -96,12 +112,11 @@ def main():
             args.start_epoch = checkpoint['epoch']
             best_loss = checkpoint['best_loss']
             model.load_state_dict(checkpoint['state_dict'])
+            model = model.to(device)
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
-
-    cudnn.benchmark = True
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
@@ -110,8 +125,8 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            # transforms.RandomSizedCrop(224),
-            # transforms.RandomHorizontalFlip(),
+            transforms.RandomSizedCrop(224),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -119,7 +134,8 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
     # define loss function (criterion) and pptimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    # criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss()
 
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
@@ -136,12 +152,19 @@ def main():
         # remember best prec@1 and save checkpoint
         is_best = loss < best_loss
         best_loss = min(loss, best_loss)
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'arch': args.arch,
-            'state_dict': model.state_dict(),
-            'best_loss': best_loss,
-        }, is_best, args.arch.lower())
+        
+        if step % args.check_interval == 0:
+            num_save += 1
+            save_checkpoint({
+               'epoch': epoch + 1,
+               'arch': args.arch,
+              'state_dict': model.state_dict(),
+              'best_loss': best_loss,
+            }, is_best, ['net',str(num_save)])
+            if num_save == 5:
+                num_save = 0
+
+
 
 def train(train_loader, model, criterion, optimizer, epoch):
     batch_time = AverageMeter()
@@ -157,7 +180,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda(async=True)
+        # target = target.cuda(async=True)
+        input = input.to(device)
+        target = target.to(device)
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)
         # compute output
@@ -187,9 +212,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1))
 
-        step =  i + len(train_loader)*(epoch-1) 
         tf_logger.scalar_summary("loss", losses.avg, step)
         tf_logger.scalar_summary("accs", prec1.avg, step)
+        step += 1 
 
     return losses.avg
 
@@ -197,7 +222,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename + '_latest.pth.tar')
     if is_best:
-        shutil.copyfile(filename + '_latest.pth.tar', filename + '_best.pth.tar')
+        shutil.copyfile(filename + '_latest.pth.tar', args.arch.lower() + '_best.pth.tar')
 
 
 class AverageMeter(object):
@@ -220,7 +245,7 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 30))
+    lr = args.lr * (0.1 ** (epoch // 7))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
