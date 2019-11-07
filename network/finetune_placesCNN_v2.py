@@ -81,7 +81,7 @@ else:
 
 
 def main():
-    global args, best_loss, device, step, num_sav, writer
+    global args, best_loss, device, step, num_save, writer
     args = parser.parse_args()
     print(args)
 
@@ -176,7 +176,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
-        losses.update(loss.data[0], input.size(0))
+        losses.update(loss.data[0], input.size(0)) # input.size(0) = batch_size
         top1.update(prec1[0], input.size(0))
 
         # compute gradient and do SGD step
@@ -197,10 +197,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1))
         step += 1 
-        '''
-        writer.add_scalar('traning loss', losses.avg, step)
-        writer.add_scalar('traning accuracy', top1.avg, step)
-        '''
+        
+        writer.add_scalar('traning loss', loss.item(), step)
+        writer.add_scalar('traning accuracy', prec1[0], step)
+        
         if step % args.check_interval == 0:
             num_save += 1
             save_checkpoint({
