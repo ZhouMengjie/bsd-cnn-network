@@ -14,8 +14,12 @@ import argparse
 import os
 import shutil
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+import pdb
 
 import torch
+import torchvision
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -24,9 +28,8 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-
-import pdb
 from torch.utils.tensorboard import SummaryWriter
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -34,8 +37,6 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('data', metavar='DIR',
-                    help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
@@ -67,10 +68,7 @@ parser.add_argument('--check_interval', default=500, type=int, metavar='N',
                     help='interval of each checkpoint')
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
-parser.add_argument('--dataset',default='places365',help='which dataset to train')
 
-step = 0
-num_save = 0
 writer = SummaryWriter('runs/bsd_experiment')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
@@ -81,7 +79,7 @@ else:
 
 
 def main():
-    global args, best_loss, device, step, num_save, writer
+    global args, best_loss, device, writer
     args = parser.parse_args()
     print(args)
 
@@ -98,7 +96,7 @@ def main():
     state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)
-    writer.add_graph(model)
+    print(model) 
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
@@ -122,7 +120,8 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     # Data loading code
-    traindir = os.path.join(args.data, 'train')
+    data_dir = 'data/hymenoptera_data'
+    traindir = os.path.join(data_dir, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -137,9 +136,8 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
     # define loss function (criterion) and pptimizer
-    # criterion = nn.CrossEntropyLoss().cuda()
+    # criterion = nn.CrossEntropyLoss().cuda()  
     criterion = nn.CrossEntropyLoss()
-
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -156,6 +154,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     data_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
+    num_save = 0
 
     # switch to train mode
     model.train()
@@ -176,7 +175,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
-        losses.update(loss.data[0], input.size(0)) # input.size(0) = batch_size
+        losses.update(loss.item(), input.size(0)) # input.size(0) = batch_size
         top1.update(prec1[0], input.size(0))
 
         # compute gradient and do SGD step
@@ -196,18 +195,17 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1))
-        step += 1 
+        t_step = epoch*len(train_loader) + i         
+        writer.add_scalar('traning loss', loss.item(), t_step)
+        writer.add_scalar('traning accuracy', prec1[0], t_step)
         
-        writer.add_scalar('traning loss', loss.item(), step)
-        writer.add_scalar('traning accuracy', prec1[0], step)
-        
-        if step % args.check_interval == 0:
+        if t_step % args.check_interval == 0:
             num_save += 1
             save_checkpoint({
                 'epoch': epoch,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-            }, ['net',str(num_save)])
+            }, 'net'+ str(num_save))
             if num_save == 5:
                 num_save = 0
 
@@ -255,6 +253,18 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+# helper function to show an image
+# (used in the `plot_classes_preds` function below)
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+    img = img / 2 + 0.5     # unnormalize
+    npimg = img.numpy()
+    if one_channel:
+        plt.imshow(npimg, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 
 if __name__ == '__main__':
