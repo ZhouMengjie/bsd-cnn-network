@@ -64,8 +64,10 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
-parser.add_argument('--check_interval', default=500, type=int, metavar='N',
+parser.add_argument('--check_interval', default=100, type=int, metavar='N',
                     help='interval of each checkpoint')
+parser.add_argument('--num_save', default=0, type=int, metavar='N',
+                    help='inital number of the checkpoint')
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
@@ -75,8 +77,6 @@ if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
 else:
     device = torch.device('cpu')
-
-
 
 def main():
     global args, best_loss, device, writer
@@ -154,7 +154,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
     data_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    num_save = 0
 
     # switch to train mode
     model.train()
@@ -200,14 +199,14 @@ def train(train_loader, model, criterion, optimizer, epoch):
         writer.add_scalar('traning accuracy', prec1[0], t_step)
         
         if t_step % args.check_interval == 0:
-            num_save += 1
+            args.num_save += 1
             save_checkpoint({
                 'epoch': epoch,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-            }, 'net'+ str(num_save))
-            if num_save == 5:
-                num_save = 0
+            }, 'net'+ str(args.num_save))
+            if args.num_save == 5:
+                args.num_save = 0
 
 
 def save_checkpoint(state, filename='checkpoint.pth.tar'):
