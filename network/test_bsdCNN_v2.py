@@ -75,7 +75,7 @@ def main():
     print(args)
 
     # load model
-    model_file = 'net3_latest.pth.tar'
+    model_file = 'net2_latest.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
