@@ -7,7 +7,7 @@ import argparse
 import os
 import shutil
 import time
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -75,7 +75,8 @@ def main():
     print(args)
 
     # load model
-    model_file = 'gaps_latest.pth.tar'
+    classes = ('non_junctions', 'junctions')
+    model_file = 'junctions_latest.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -105,10 +106,11 @@ def main():
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss()
-    validate(val_loader, model, criterion)
+    validate(val_loader, model, criterion, classes)
+    
 
 
-def validate(val_loader, model, criterion):
+def validate(val_loader, model, criterion, classes):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -125,6 +127,10 @@ def validate(val_loader, model, criterion):
 
         # compute output
         output = model(input_var)
+        # convert output probabilities to predicted class
+        _, pred_tensor = torch.max(output, 1)
+        preds = np.squeeze(pred_tensor.nump())
+        pred_lable = classes[preds]
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
