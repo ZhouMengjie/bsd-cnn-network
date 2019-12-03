@@ -17,8 +17,8 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from torch.utils.tensorboard import SummaryWriter
-#from tensorboardX import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -96,8 +96,8 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.Scale(256),
-            transforms.CenterCrop(224),
+            #transforms.Scale(256),
+            #transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),

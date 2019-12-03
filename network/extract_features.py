@@ -17,9 +17,10 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from torch.utils.tensorboard import SummaryWriter
-#from tensorboardX import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 import pdb
+import scipy.io
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -61,7 +62,6 @@ parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
 best_prec1 = 0
-
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -75,8 +75,8 @@ def main():
     print(args)
 
     # load model
-    classes = ('non_junctions', 'junctions')
-    model_file = 'junctions_latest.pth.tar'
+    classes = ('junctions', 'non_junctions')
+    model_file = 'junctions/net5_latest.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -89,15 +89,15 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/hymenoptera_data' # or GAPS
-    valdir = os.path.join(data_dir, 'val')
+    data_dir = 'data/london/JUNCTIONS' # or GAPS
+    valdir = os.path.join(data_dir, 'test')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.Scale(256),
-            transforms.CenterCrop(224),
+            #transforms.Scale(256),
+            #transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -105,12 +105,15 @@ def main():
         num_workers=args.workers, pin_memory=True)
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
+    features = [None] * len(val_loader)
     criterion = nn.CrossEntropyLoss()
-    validate(val_loader, model, criterion, classes)
+    features = validate(val_loader, model, criterion, classes, features)
+    scipy.io.savemat('junctions_features.mat', mdict={'features':features[0]})
+
     
 
 
-def validate(val_loader, model, criterion, classes):
+def validate(val_loader, model, criterion, classes, features):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -129,11 +132,19 @@ def validate(val_loader, model, criterion, classes):
         output = model(input_var)
         # convert output probabilities to predicted class
         _, pred_tensor = torch.max(output, 1)
-        preds = np.squeeze(pred_tensor.nump())
-        pred_lable = classes[preds]
-        loss = criterion(output, target_var)
+        preds = np.squeeze(pred_tensor.cpu().numpy())
+        if preds is False:
+            features[i] = 1
+        else:
+            features[i] = 0
+        
+        #pred_lable = classes[preds]
+        #print(preds)
+
+
 
         # measure accuracy and record loss
+        loss = criterion(output, target_var)
         prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
@@ -153,7 +164,7 @@ def validate(val_loader, model, criterion, classes):
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))
 
-    return top1.avg
+    return features
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

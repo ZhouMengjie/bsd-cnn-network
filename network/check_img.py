@@ -67,14 +67,14 @@ args = parser.parse_args()
 # Data loading code
 data_transforms = {
     'train': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomResizedCrop(224),
+        #transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
 }
 
-data_dir = 'data/hymenoptera_data'
+data_dir = 'data/GAPS'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in ['train']}
@@ -88,14 +88,15 @@ img_paths = image_datasets['train'].imgs
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+'''
 # Get a batch of training data
 inputs, targets = next(iter(train_loader['train']))
 print(inputs.size(0))
 # Make a grid from batch
 out = torchvision.utils.make_grid(inputs)
 imshow(out, title=[class_names[x] for x in targets])
-
 '''
+
 for i, (input, target) in enumerate(image_datasets['train']):
     out = torchvision.utils.make_grid(input)
     # print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
@@ -104,5 +105,5 @@ for i, (input, target) in enumerate(image_datasets['train']):
     print(target)
     # imshow(out, title=[class_names[x] for x in target]) 
     imshow(out, title=[class_names[target]])   
-'''
+
 
