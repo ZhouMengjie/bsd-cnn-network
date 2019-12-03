@@ -108,7 +108,9 @@ def main():
     features = [None] * len(val_loader)
     criterion = nn.CrossEntropyLoss()
     features = validate(val_loader, model, criterion, classes, features)
-    scipy.io.savemat('junctions_features.mat', mdict={'features':features[0]})
+    #scipy.io.savemat('junctions_features.mat', mdict={'features':features[0]})
+    
+    #scipy.io.savemat('junctions_features.mat', features)
 
     
 
@@ -138,6 +140,7 @@ def validate(val_loader, model, criterion, classes, features):
         else:
             features[i] = 0
         
+        scipy.io.savemat('junctions_features.mat', mdict={'features':features[i]})
         #pred_lable = classes[preds]
         #print(preds)
 
