@@ -108,9 +108,10 @@ def main():
     features = [None] * len(val_loader)
     criterion = nn.CrossEntropyLoss()
     features = validate(val_loader, model, criterion, classes, features)
+    #print(features)
     #scipy.io.savemat('junctions_features.mat', mdict={'features':features[0]})
     
-    #scipy.io.savemat('junctions_features.mat', features)
+    scipy.io.savemat('junctions_features.mat', mdict={'features': features})
 
     
 
@@ -134,15 +135,11 @@ def validate(val_loader, model, criterion, classes, features):
         output = model(input_var)
         # convert output probabilities to predicted class
         _, pred_tensor = torch.max(output, 1)
-        preds = np.squeeze(pred_tensor.cpu().numpy())
-        if preds is False:
-            features[i] = 1
-        else:
-            features[i] = 0
-        
-        scipy.io.savemat('junctions_features.mat', mdict={'features':features[i]})
-        #pred_lable = classes[preds]
+        preds = np.squeeze(pred_tensor.cpu().numpy()) 
+        features[i] = preds      
+        pred_lable = classes[preds]
         #print(preds)
+        #print(pred_lable)
 
 
 
