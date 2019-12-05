@@ -57,12 +57,12 @@ parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--print-freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
+parser.add_argument('--resume', dest='resume', action='store_true',
+                    help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
                     help='interval of each checkpoint')
@@ -79,33 +79,34 @@ else:
     device = torch.device('cpu')
 
 def main():
-    global args, best_loss, device, writer
+    global args, device, writer
     args = parser.parse_args()
     print(args)
 
-
     # load the pre-trained weights
-    
-    # model_file = 'checkpoint_latest.pth.tar'
-    model_file = '%s_places365.pth.tar' % args.arch
-    if not os.access(model_file, os.W_OK):
-        weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
-        os.system('wget ' + weight_url)
-
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-    state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-    model.load_state_dict(state_dict, strict=False)
-    print(model) 
-
+    if args.resume:
+        model_file = 'checkpoint_latest.pth.tar'
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+        # args.start_epoch = checkpoint['epoch']
+        args.start_epoch = 0
+        model.load_state_dict(checkpoint['state_dict'])        
+    else:
+        model_file = '%s_places365.pth.tar' % args.arch
+        if not os.access(model_file, os.W_OK):
+            weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
+            os.system('wget ' + weight_url)
+            model = models.__dict__[args.arch](num_classes=args.num_classes)
+            checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+            state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+            state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+            state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+            model.load_state_dict(state_dict, strict=False)
+             
+    print(model)
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
         model = nn.DataParallel(model)
-
     model = model.to(device)
-
 
     # optionally resume from a checkpoint
     if args.resume:
