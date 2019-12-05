@@ -37,17 +37,17 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=75, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=32, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
@@ -71,7 +71,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet50')
+writer = SummaryWriter('runs/resnet18_aug')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -85,6 +85,8 @@ def main():
 
 
     # load the pre-trained weights
+    
+    # model_file = 'checkpoint_latest.pth.tar'
     model_file = '%s_places365.pth.tar' % args.arch
     if not os.access(model_file, os.W_OK):
         weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
@@ -111,7 +113,6 @@ def main():
             print("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch']
-            best_loss = checkpoint['best_loss']
             model.load_state_dict(checkpoint['state_dict'])
             model = model.to(device)
             print("=> loaded checkpoint '{}' (epoch {})"
@@ -127,8 +128,10 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-           # transforms.RandomSizedCrop(224),
-           # transforms.RandomHorizontalFlip(),
+        #    transforms.RandomSizedCrop(224),
+            transforms.RandomRotation(30),
+            transforms.ColorJitter(brightness=0.5),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),

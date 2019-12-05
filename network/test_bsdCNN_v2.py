@@ -75,7 +75,7 @@ def main():
     print(args)
 
     # load model
-    model_file = 'gaps/net5_latest.pth.tar'
+    model_file = 'net4_latest.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -88,7 +88,8 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/london/GAPS' # or GAPS
+    # data_dir = 'data/london/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     valdir = os.path.join(data_dir, 'test')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
