@@ -61,7 +61,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_true',
+parser.add_argument('--resume', dest='resume', action='store_false',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -84,42 +84,30 @@ def main():
     print(args)
 
     # load the pre-trained weights
+    model_file = '%s_places365.pth.tar' % args.arch
+    if not os.access(model_file, os.W_OK):
+        weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
+        os.system('wget ' + weight_url)
+        
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+    state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+    model.load_state_dict(state_dict, strict=False)   
+
+    print(model)
+
     if args.resume:
         model_file = 'checkpoint_latest.pth.tar'
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
         # args.start_epoch = checkpoint['epoch']
-        args.start_epoch = 0
         model.load_state_dict(checkpoint['state_dict'])        
-    else:
-        model_file = '%s_places365.pth.tar' % args.arch
-        if not os.access(model_file, os.W_OK):
-            weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
-            os.system('wget ' + weight_url)
-            model = models.__dict__[args.arch](num_classes=args.num_classes)
-            checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-            state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-            state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-            state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-            model.load_state_dict(state_dict, strict=False)
              
-    print(model)
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
         model = nn.DataParallel(model)
     model = model.to(device)
-
-    # optionally resume from a checkpoint
-    if args.resume:
-        if os.path.isfile(args.resume):
-            print("=> loading checkpoint '{}'".format(args.resume))
-            checkpoint = torch.load(args.resume)
-            args.start_epoch = checkpoint['epoch']
-            model.load_state_dict(checkpoint['state_dict'])
-            model = model.to(device)
-            print("=> loaded checkpoint '{}' (epoch {})"
-                  .format(args.resume, checkpoint['epoch']))
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
 
     # Data loading code
     data_dir = 'data/JUNCTIONS' # or GAPS
