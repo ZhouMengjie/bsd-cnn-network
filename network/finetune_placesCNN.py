@@ -43,7 +43,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=75, type=int, metavar='N',
+parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -71,7 +71,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_aug')
+writer = SummaryWriter('runs/resnet18_adam')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -88,7 +88,7 @@ def main():
     if not os.access(model_file, os.W_OK):
         weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
         os.system('wget ' + weight_url)
-        
+
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -99,9 +99,9 @@ def main():
     print(model)
 
     if args.resume:
-        model_file = 'checkpoint_latest.pth.tar'
+        model_file = 'checkpoint3_latest.pth.tar'
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-        # args.start_epoch = checkpoint['epoch']
+        args.start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
@@ -117,8 +117,8 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-        #    transforms.RandomSizedCrop(224),
-            transforms.RandomRotation(30),
+            # transforms.RandomSizedCrop(224),
+            # transforms.RandomRotation(30),
             transforms.ColorJitter(brightness=0.5),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
@@ -128,11 +128,12 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
     # define loss function (criterion) and pptimizer
-    # criterion = nn.CrossEntropyLoss().cuda()  
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    criterion = nn.CrossEntropyLoss().cuda()  
+    # criterion = nn.CrossEntropyLoss()
+    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+    optimizer = torch.optim.Adam(model.parameters())
 
     # set tf logger for tensorboard
     for epoch in range(args.start_epoch, args.epochs):

@@ -1,73 +1,188 @@
+# this code is modified from the pytorch example code: https://github.com/pytorch/examples/blob/master/imagenet/main.py
+# after the model is trained, you might use convert_model.py to remove the data parallel module to make the model as standalone weight.
+#
+# Bolei Zhou
 
-'''
- @article{zhou2017places,
-   title={Places: A 10 million Image Database for Scene Recognition},
-   author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
-   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-   year={2017},
-   publisher={IEEE}
-   website={http://places2.csail.mit.edu}
- }
-'''
+import argparse
+import os
+import shutil
+import time
 
 import torch
-from torch.autograd import Variable as V
+import torch.nn as nn
+import torch.nn.parallel
+import torch.backends.cudnn as cudnn
+import torch.optim
+import torch.utils.data
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 import torchvision.models as models
-from torchvision import transforms as trn
-from torch.nn import functional as F
-import os
-from PIL import Image
-
-# th architecture to use
-arch = 'resnet18'
-
-# load the pre-trained weights 
-model_file = '%s_places365.pth.tar' % arch
-if not os.access(model_file, os.W_OK):
-    weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
-    os.system('wget ' + weight_url)
-
-model = models.__dict__[arch](num_classes=2)
-checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-model.load_state_dict(state_dict)
-model.eval()
+# from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
+import pdb
+model_names = sorted(name for name in models.__dict__
+    if name.islower() and not name.startswith("__")
+    and callable(models.__dict__[name]))
 
 
-# load the image transformer
-centre_crop = trn.Compose([
-        trn.Resize((256,256)),
-        trn.CenterCrop(224),
-        trn.ToTensor(),
-        trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-])
+parser = argparse.ArgumentParser(description='PyTorch BSD Training')
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+                    help='model architecture: ' +
+                        ' | '.join(model_names) +
+                        ' (default: resnet18)')
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                    help='number of data loading workers (default: 4)')
+parser.add_argument('--epochs', default=90, type=int, metavar='N',
+                    help='number of total epochs to run')
+parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+                    help='manual epoch number (useful on restarts)')
+parser.add_argument('-b', '--batch-size', default=1, type=int,
+                    metavar='N', help='mini-batch size (default: 256)')
+parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+                    metavar='LR', help='initial learning rate')
+parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
+                    help='momentum')
+parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+                    metavar='W', help='weight decay (default: 1e-4)')
+parser.add_argument('--print-freq', '-p', default=10, type=int,
+                    metavar='N', help='print frequency (default: 10)')
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_false',
+                    help='evaluate model on validation set')
+parser.add_argument('--pretrained', dest='pretrained', action='store_false',
+                    help='use pre-trained model')
+parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
+parser.add_argument('--check_interval', default=500, type=int, metavar='N',
+                    help='interval of each checkpoint')
+parser.add_argument('--num_save', default=0, type=int, metavar='N',
+                    help='inital number of the checkpoint')
+parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
+                    help='number of saved checkpoints')
 
-# load the class label
-file_name = 'categories_places365.txt'
-if not os.access(file_name, os.W_OK):
-    synset_url = 'https://raw.githubusercontent.com/csailvision/places365/master/categories_places365.txt'
-    os.system('wget ' + synset_url)
-classes = list()
-with open(file_name) as class_file:
-    for line in class_file:
-        classes.append(line.strip().split(' ')[0][3:])
-classes = tuple(classes)
+best_prec1 = 0
 
-# load the test image
-img_name = '12.jpg'
-if not os.access(img_name, os.W_OK):
-    img_url = 'http://places.csail.mit.edu/demo/' + img_name
-    os.system('wget ' + img_url)
+if torch.cuda.is_available():
+    device = torch.device('cuda:0')
+    torch.backends.cudnn.benchmark = True
+else:
+    device = torch.device('cpu')
 
-img = Image.open(img_name)
-input_img = V(centre_crop(img).unsqueeze(0))
 
-# forward pass
-logit = model.forward(input_img)
-h_x = F.softmax(logit, 1).data.squeeze()
-probs, idx = h_x.sort(0, True)
+def main():
+    global args, best_prec1
+    args = parser.parse_args()
+    print(args)
 
-print('{} prediction on {}'.format(arch,img_name))
-# output the prediction
-for i in range(0, 5):
-    print('{:.3f} -> {}'.format(probs[i], classes[idx[i]]))
+    # load model
+    model_file = 'net2_latest.pth.tar'
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    # Data loading code
+    data_dir = 'data/london/JUNCTIONS/' # or GAPS
+    # data_dir = 'data/JUNCTIONS' # or GAPS
+    valdir = os.path.join(data_dir, 'test')
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    val_loader = torch.utils.data.DataLoader(
+        datasets.ImageFolder(valdir, transforms.Compose([
+            #transforms.Scale(256),
+            #transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])),
+        batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True)
+    print(len(val_loader))
+    # define loss function (criterion) and pptimizer
+    criterion = nn.CrossEntropyLoss()
+    validate(val_loader, model, criterion)
+
+
+def validate(val_loader, model, criterion):
+    batch_time = AverageMeter()
+    losses = AverageMeter()
+    top1 = AverageMeter()
+
+    # switch to evaluate mode
+    model.eval()
+
+    end = time.time()
+    for i, (input, target) in enumerate(val_loader):
+        input = input.to(device)
+        target = target.to(device)
+        input_var = torch.autograd.Variable(input)
+        target_var = torch.autograd.Variable(target)
+
+        # compute output
+        output = model(input_var)
+        loss = criterion(output, target_var)
+
+        # measure accuracy and record loss
+        prec1 = accuracy(output.data, target, topk=(1, ))
+        losses.update(loss.item(), input.size(0))
+        top1.update(prec1[0], input.size(0))
+
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if i % args.print_freq == 0:
+            print('Test: [{0}/{1}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                   i, len(val_loader), batch_time=batch_time, loss=losses,
+                   top1=top1))
+
+    print(' * Prec@1 {top1.avg:.3f}'
+          .format(top1=top1))
+
+    return top1.avg
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
+
+
+if __name__ == '__main__':
+    main()
