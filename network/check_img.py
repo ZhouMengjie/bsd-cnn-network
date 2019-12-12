@@ -71,6 +71,7 @@ data_transforms = {
     'train': transforms.Compose([
         #transforms.RandomResizedCrop(224),
         # transforms.RandomRotation(30),
+        transforms.Resize(227),
         transforms.ColorJitter(brightness=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
