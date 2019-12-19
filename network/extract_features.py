@@ -77,7 +77,7 @@ def main():
     # load model
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
-    model_file = 'gaps/net5_latest.pth.tar'
+    model_file = 'gaps_best.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}

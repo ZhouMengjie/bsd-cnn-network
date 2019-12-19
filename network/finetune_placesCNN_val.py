@@ -29,8 +29,8 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from torch.utils.tensorboard import SummaryWriter
-# from tensorboardX import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -42,13 +42,13 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
-parser.add_argument('-j', '--workers', default=2, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
+parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=4, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_test')
+writer = SummaryWriter('runs/resnet18_sgd')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -100,12 +100,15 @@ def main():
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)   
 
-    print(model)
+    # print(model)
 
     if args.resume:
-        model_file = 'checkpoint3_latest.pth.tar'
-        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-        args.start_epoch = checkpoint['epoch']
+        model_file = 'checkpoint1.pth.tar'
+        # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+        checkpoint = torch.load(model_file)
+        args.start_epoch = 0 #checkpoint['epoch']
+        best_prec = checkpoint['best_prec']
+        best_loss = checkpoint['best_loss']
         model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
@@ -114,16 +117,15 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    # data_dir = 'data/JUNCTIONS' # or GAPS
-    data_dir = 'data/hymenoptera_data'
+    data_dir = 'data/JUNCTIONS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'val')
+    valdir = os.path.join(data_dir, 'test')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            transforms.RandomResizedCrop(224),
+            # transforms.RandomResizedCrop(224),
             # transforms.RandomRotation(30),
             # transforms.ColorJitter(brightness=0.5),
             # transforms.RandomHorizontalFlip(),
@@ -132,11 +134,11 @@ def main():
         ])),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
-
+    # print(len(train_loader))
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            # transforms.Resize(256),
+            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -146,36 +148,35 @@ def main():
 
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss().cuda()  
-    # criterion = nn.CrossEntropyLoss()
-    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
-    #                             momentum=args.momentum,
-    #                             weight_decay=args.weight_decay)
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
+    # optimizer = torch.optim.Adam(model.parameters())
 
     # set tf logger for tensorboard
-    for epoch in range(args.start_epoch, args.epochs):
-        adjust_learning_rate(optimizer, epoch)
-
+    for epoch in range(args.start_epoch, args.epochs):   
         # train for one epoch
+        adjust_learning_rate(optimizer, epoch)
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
-        prec, loss = validate(val_loader, model, criterion, epoch)
+        with torch.no_grad():
+            prec, loss = validate(val_loader, model, criterion, epoch)
 
         # remember best prec and best loss and save checkpoint
         is_best = prec > best_prec
         best_prec = max(prec, best_prec)
-
+        
         is_lowest = loss < best_loss
         best_loss = min(loss, best_loss)
-
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'arch': args.arch,
-            'state_dict': model.state_dict(),
-            'best_prec': best_prec,
-            'best_loss': best_loss
-        }, is_best, is_lowest, args.arch.lower())     
+        if is_best | is_lowest:
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'arch': args.arch,
+                'state_dict': model.state_dict(),
+                'best_prec': best_prec,
+                'best_loss': best_loss
+            }, is_best, is_lowest, args.arch.lower())     
 
        
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -230,10 +231,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         writer.add_scalar('traning loss', losses.avg, t_step)
         writer.add_scalar('traning accuracy', top1.avg, t_step)
         # random mini-batch
-        classes = ('ants', 'bees')
-        writer.add_figure('predictions vs. actuals',
-                        plot_classes_preds(output, input, target, classes),
-                        global_step=epoch * len(train_loader) + i)
+        classes = ('junctions', 'non_junctions')
+        # writer.add_figure('predictions vs. actuals',
+        #                 plot_classes_preds(output, input, target, classes),
+        #                 global_step=epoch * len(train_loader) + i)
         
         if t_step % args.check_interval == 0:
             args.num_save += 1
@@ -268,6 +269,11 @@ def validate(val_loader, model, criterion, epoch):
         prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
+
+    print('Epoch: [{0}]\t'
+        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+        'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+        epoch, loss=losses, top1=top1))
     
     writer.add_scalar('validation loss', losses.avg, epoch)
     writer.add_scalar('validation accuracy', top1.avg, epoch)
@@ -300,13 +306,11 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = args.lr * (0.1 ** (epoch // 30))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
-
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
