@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_sgd')
+writer = SummaryWriter('runs/resnet18_adam_bd')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -117,9 +117,9 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'test')
+    valdir = os.path.join(data_dir, 'val')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -148,15 +148,15 @@ def main():
 
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss().cuda()  
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
-    # optimizer = torch.optim.Adam(model.parameters())
+    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+    optimizer = torch.optim.Adam(model.parameters())
 
     # set tf logger for tensorboard
     for epoch in range(args.start_epoch, args.epochs):   
         # train for one epoch
-        adjust_learning_rate(optimizer, epoch)
+        # adjust_learning_rate(optimizer, epoch)
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
@@ -231,7 +231,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         writer.add_scalar('traning loss', losses.avg, t_step)
         writer.add_scalar('traning accuracy', top1.avg, t_step)
         # random mini-batch
-        classes = ('junctions', 'non_junctions')
+        # classes = ('junctions', 'non_junctions')
         # writer.add_figure('predictions vs. actuals',
         #                 plot_classes_preds(output, input, target, classes),
         #                 global_step=epoch * len(train_loader) + i)

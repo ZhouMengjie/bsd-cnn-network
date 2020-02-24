@@ -71,15 +71,15 @@ data_transforms = {
     'train': transforms.Compose([
         #transforms.RandomResizedCrop(224),
         # transforms.RandomRotation(30),
-        transforms.Resize(227),
-        transforms.ColorJitter(brightness=0.5),
-        transforms.RandomHorizontalFlip(),
+        # transforms.Resize(227),
+        # transforms.ColorJitter(brightness=0.5),
+        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
     ]),
 }
 
-data_dir = 'data/JUNCTIONS'
+data_dir = 'data/GAPS'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in ['train']}
@@ -95,20 +95,20 @@ img_paths = image_datasets['train'].imgs
 
 
 # Get a batch of training data
-inputs, targets = next(iter(train_loader['train']))
-print(inputs.size(0))
-# Make a grid from batch
-out = torchvision.utils.make_grid(inputs)
-imshow(out, title=[class_names[x] for x in targets])
+# inputs, targets = next(iter(train_loader['train']))
+# print(inputs.size(0))
+# # Make a grid from batch
+# out = torchvision.utils.make_grid(inputs)
+# imshow(out, title=[class_names[x] for x in targets])
 
 
-# for i, (input, target) in enumerate(image_datasets['train']):
-#     out = torchvision.utils.make_grid(input)
-#     # print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
-#     print(img_paths[i])
-#     print(input.size(0))
-#     print(target)
-#     # imshow(out, title=[class_names[x] for x in target]) 
-#     imshow(out, title=[class_names[target]])   
+for i, (input, target) in enumerate(image_datasets['train']):
+    out = torchvision.utils.make_grid(input)
+    # print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
+    print(img_paths[i])
+    print(input.size(0))
+    print(target)
+    # imshow(out, title=[class_names[x] for x in target]) 
+    imshow(out, title=[class_names[target]])   
 
 
