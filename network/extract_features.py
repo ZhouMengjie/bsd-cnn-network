@@ -75,9 +75,10 @@ def main():
     print(args)
 
     # load model
-    classes = ('junctions', 'non_junctions')
-    # classes = ('gaps', 'non_gaps')
-    model_file = 'model/JUNCTIONS/resnet18_best.pth.tar'
+    # classes = ('junctions', 'non_junctions')
+    classes = ('gaps', 'non_gaps')
+    # model_file = 'model/JUNCTIONS/resnet18_best.pth.tar'
+    model_file = 'old_models/gaps_best.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
@@ -91,8 +92,8 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
-    valdir = os.path.join(data_dir, 'test_uq')
+    data_dir = 'data/GAPS' # or GAPS
+    valdir = os.path.join(data_dir, 'test_cmu')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -112,8 +113,8 @@ def main():
     features = validate(val_loader, model, criterion, classes, features)
     #print(features)
     
-    scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
-    # scipy.io.savemat('val_gaps_features.mat', mdict={'features': features})
+    # scipy.io.savemat('val_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('cmu_gaps_features.mat', mdict={'features': features})
     
 
 
