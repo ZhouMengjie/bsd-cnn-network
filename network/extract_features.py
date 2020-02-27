@@ -77,8 +77,8 @@ def main():
     # load model
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
-    # model_file = 'model/JUNCTIONS/resnet18_best.pth.tar'
-    model_file = 'old_models/gaps_best.pth.tar'
+    model_file = 'model/GAPS/resnet18_best.pth.tar'
+    # model_file = 'old_models/gaps_best.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
@@ -93,10 +93,11 @@ def main():
 
     # Data loading code
     data_dir = 'data/GAPS' # or GAPS
-    valdir = os.path.join(data_dir, 'test_cmu')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+                                    std=[0.229, 0.224, 0.225])   
 
+    sub_area = 'test_uq'            
+    valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             #transforms.Scale(256),
@@ -106,6 +107,7 @@ def main():
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
     features = [None] * len(val_loader)
@@ -113,8 +115,15 @@ def main():
     features = validate(val_loader, model, criterion, classes, features)
     #print(features)
     
-    # scipy.io.savemat('val_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('cmu_gaps_features.mat', mdict={'features': features})
+    # scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
+    data_transforms = {sub_area: transforms.Compose([transforms.ToTensor(),normalize,]),}
+    image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
+                                          data_transforms[x])
+                    for x in [sub_area]}  
+    img_paths = image_datasets[sub_area].imgs   
+    # scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'img_paths': img_paths})
+    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'img_paths': img_paths})
     
 
 
@@ -139,7 +148,7 @@ def validate(val_loader, model, criterion, classes, features):
         _, pred_tensor = torch.max(output, 1)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
         features[i] = preds      
-        pred_lable = classes[preds]
+        # pred_lable = classes[preds]
         #print(preds)
         #print(pred_lable)
 
