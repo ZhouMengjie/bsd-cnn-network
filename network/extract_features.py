@@ -157,7 +157,7 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         panoids[i] = result[4]
         print(panoids[i])
         # pred_lable = classes[preds]
-        print(preds)
+        # print(preds)
         #print(pred_lable)
 
 
