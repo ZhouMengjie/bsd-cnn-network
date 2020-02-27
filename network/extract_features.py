@@ -110,24 +110,28 @@ def main():
 
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
-    features = [None] * len(val_loader)
-    criterion = nn.CrossEntropyLoss()
-    features = validate(val_loader, model, criterion, classes, features)
-    #print(features)
-    
-    # scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
     data_transforms = {sub_area: transforms.Compose([transforms.ToTensor(),normalize,]),}
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                     for x in [sub_area]}  
-    img_paths = image_datasets[sub_area].imgs   
+    img_paths = image_datasets[sub_area].imgs
+    panoids = [None] * len(val_loader)
+
+    features = [None] * len(val_loader)
+    criterion = nn.CrossEntropyLoss()
+    features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
+    #print(features)
+    
+    # scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
+
+       
     # scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'img_paths': img_paths})
-    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'img_paths': img_paths})
+    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 
-def validate(val_loader, model, criterion, classes, features):
+def validate(val_loader, model, criterion, classes, features, img_paths, panoids):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -147,7 +151,9 @@ def validate(val_loader, model, criterion, classes, features):
         # convert output probabilities to predicted class
         _, pred_tensor = torch.max(output, 1)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
-        features[i] = preds      
+        features[i] = preds  
+        panoids[i] = img_paths[i][0]    
+        print(panoids[i])
         # pred_lable = classes[preds]
         #print(preds)
         #print(pred_lable)
@@ -175,7 +181,7 @@ def validate(val_loader, model, criterion, classes, features):
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))
 
-    return features
+    return features,panoids
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
