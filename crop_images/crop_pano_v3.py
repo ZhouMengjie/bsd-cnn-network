@@ -114,7 +114,7 @@ class RenderThread:
 
 
 start = time.clock()
-dataset = 'hudsonriver5k'
+dataset = 'train'
 directory = os.getcwd()
 snaps_directory = os.path.join(directory, 'images', dataset) 
 if not os.path.isdir(snaps_directory):

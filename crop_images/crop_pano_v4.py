@@ -24,7 +24,7 @@ def crop_pano(pano):
 start = time.clock()
 if __name__ == '__main__':
     directory = os.getcwd()
-    dataset = 'unionsquare5k'
+    dataset = 'train'
     snaps_directory = os.path.join(directory, 'images', dataset) 
     if not os.path.isdir(snaps_directory):
         os.mkdir(snaps_directory)
