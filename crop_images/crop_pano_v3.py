@@ -117,7 +117,7 @@ class RenderThread:
 
 
 start = time.clock()
-dataset = 'wallstreet5k'
+dataset = 'unionsquare5k'
 directory = os.getcwd()
 snaps_directory_junction = os.path.join(directory, 'network', 'data', 'JUNCTIONS', dataset) 
 snaps_directory_gap = os.path.join(directory, 'network', 'data', 'GAPS', dataset) 
