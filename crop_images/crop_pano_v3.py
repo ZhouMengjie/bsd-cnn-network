@@ -11,15 +11,17 @@ import time
 num_threads = 6
 counter = 0
 
+# dev/datasets/streetlearn
 
 class Cropper():
     def __init__(self):
-        self.dir = os.getcwd()
+        # self.dir = os.path.join(os.environ['HOME'],'Desktop','dev', 'datasets','streetlearn')
+        self.dir = os.path.join(os.environ['HOME'],'dev','datasets','streetlearn')
     
     def crop_pano(self, pano_id):
-        img_path = os.path.join(self.dir, 'images', 'jpegs_manhattan_2019', pano_id+'.jpg')
+        img_path = os.path.join(self.dir, 'jpegs_manhattan_2019', pano_id+'.jpg')
         if not os.path.exists(img_path):
-            img_path = os.path.join(self.dir, 'images', 'jpegs_pittsburgh_2019', pano_id+'.jpg')
+            img_path = os.path.join(self.dir, 'jpegs_pittsburgh_2019', pano_id+'.jpg')
 
         pano = cv2.imread(img_path)
         # Crop gsv 
@@ -37,8 +39,9 @@ class Cropper():
         return snaps 
 
 class RenderThread:
-    def __init__(self, save_dir, q, printLock):
-        self.save_dir = save_dir
+    def __init__(self, save_dir_jc, save_dir_bd, q, printLock):
+        self.save_dir_jc = save_dir_jc
+        self.save_dir_bd = save_dir_bd
         self.q = q 
         self.printLock = printLock
         self.cropper = Cropper()
@@ -58,10 +61,10 @@ class RenderThread:
                 back = r[3]
                 left = r[4]
 
-            snaps_directory_jc = os.path.join(self.save_dir, 'junctions') 
-            snaps_directory_njc = os.path.join(self.save_dir, 'non_junctions') 
-            snaps_directory_bd = os.path.join(self.save_dir, 'gaps') 
-            snaps_directory_nbd = os.path.join(self.save_dir, 'non_gaps') 
+            snaps_directory_jc = os.path.join(self.save_dir_jc, 'junctions') 
+            snaps_directory_njc = os.path.join(self.save_dir_jc, 'non_junctions') 
+            snaps_directory_bd = os.path.join(self.save_dir_bd, 'gaps') 
+            snaps_directory_nbd = os.path.join(self.save_dir_bd, 'non_gaps') 
             if not os.path.isdir(snaps_directory_jc):
                 os.mkdir(snaps_directory_jc)
 
@@ -114,11 +117,17 @@ class RenderThread:
 
 
 start = time.clock()
-dataset = 'train'
+dataset = 'hudsonriver5k'
 directory = os.getcwd()
-snaps_directory = os.path.join(directory, 'images', dataset) 
-if not os.path.isdir(snaps_directory):
-    os.mkdir(snaps_directory)
+snaps_directory_junction = os.path.join(directory, 'network', 'data', 'JUNCTIONS', dataset) 
+snaps_directory_gap = os.path.join(directory, 'network', 'data', 'GAPS', dataset) 
+if not os.path.isdir(snaps_directory_junction):
+    os.makedirs(snaps_directory_junction)
+    # os.mkdir(snaps_directory_junction)
+
+if not os.path.isdir(snaps_directory_gap):
+    os.makedirs(snaps_directory_gap)
+    # os.mkdir(snaps_directory_gap)
 
 # Open matlab file
 filename = os.path.join(os.getcwd(), 'data', dataset + '.csv')
@@ -147,7 +156,7 @@ queue = multiprocessing.JoinableQueue(32)
 printLock = multiprocessing.Lock()
 renderers = {}
 for i in range(num_threads):
-    renderer = RenderThread(snaps_directory,queue,printLock)
+    renderer = RenderThread(snaps_directory_junction,snaps_directory_gap,queue,printLock)
     render_thread = multiprocessing.Process(target=renderer.loop)
     render_thread.start()
     renderers[i] = render_thread
