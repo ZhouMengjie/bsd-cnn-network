@@ -88,10 +88,10 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    # data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     # data_dir = 'data_onlypositive/GAPS' # or GAPS
-    data_dir = 'data_onlynegative/GAPS' # or GAPS
-    valdir = os.path.join(data_dir, 'wallstreet5k')
+    # data_dir = 'data_onlynegative/GAPS' # or GAPS
+    valdir = os.path.join(data_dir, 'unionsquare5k')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
