@@ -40,7 +40,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=1, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -78,7 +78,7 @@ def main():
     # load model
     classes = ('junctions', 'non_junctions')
     # classes = ('gaps', 'non_gaps')
-    model_file = 'model/JUNCTIONS/resnet18_best.pth.tar'
+    model_file = 'model_junction/resnet18_best.pth.tar'
     # model_file = 'old_models/gaps_best.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
@@ -97,7 +97,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])   
 
-    sub_area = 'test_uq'            
+    sub_area = 'wallstreet5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -123,8 +123,8 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
     #print(features)
     
-    scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'panoids': img_paths})
+    scipy.io.savemat('ws_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('ws_junctions_ids_labels.mat', mdict={'panoids': img_paths})
 
     # scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
     # scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
@@ -159,8 +159,6 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         # pred_lable = classes[preds]
         # print(preds)
         #print(pred_lable)
-
-
 
         # measure accuracy and record loss
         loss = criterion(output, target_var)
