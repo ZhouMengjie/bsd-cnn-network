@@ -93,7 +93,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS,JUNCTIONS
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])   
 
@@ -123,11 +123,11 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
     #print(features)
     
-    # scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
-    # scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'panoids': img_paths})
+    scipy.io.savemat('ws_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('ws_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
-    scipy.io.savemat('ws_gaps_features.mat', mdict={'features': features})
-    scipy.io.savemat('ws_gaps_ids_labels.mat', mdict={'panoids': panoids})
+    # scipy.io.savemat('ws_gaps_features.mat', mdict={'features': features})
+    # scipy.io.savemat('ws_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 
