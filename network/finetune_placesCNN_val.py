@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_adam_bd')
+writer = SummaryWriter('runs/test')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -94,7 +94,9 @@ def main():
         os.system('wget ' + weight_url)
 
     model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
+    # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage.cuda(0)) # cpu to gpu
+    # checkpoint = torch.load(model_file)
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
@@ -119,13 +121,13 @@ def main():
     # Data loading code
     data_dir = 'data/GAPS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    valdir = os.path.join(data_dir, 'val')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            # transforms.RandomResizedCrop(224),
+            transforms.RandomResizedCrop(224),
             # transforms.RandomRotation(30),
             # transforms.ColorJitter(brightness=0.5),
             # transforms.RandomHorizontalFlip(),
@@ -138,7 +140,7 @@ def main():
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             # transforms.Resize(256),
-            # transforms.CenterCrop(224),
+            transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
