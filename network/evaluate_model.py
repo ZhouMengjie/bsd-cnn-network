@@ -7,10 +7,11 @@ import argparse
 import os
 import shutil
 import time
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.parallel
+import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
@@ -18,13 +19,13 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
+import matplotlib.pyplot as plt
 # from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
-
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
@@ -37,7 +38,7 @@ parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=16, type=int,
+parser.add_argument('-b', '--batch-size', default=32, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
@@ -76,15 +77,11 @@ def main():
     print(args)
 
     # load model
-    model_file = 'resnet18_places365.pth.tar'
+    model_file = 'resnet18_best.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-    # state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    # model.load_state_dict(state_dict)
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-    state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-    model.load_state_dict(state_dict, strict=False)   
+    model.load_state_dict(state_dict)
     print(model) 
 
     if torch.cuda.device_count() > 1:
@@ -93,16 +90,16 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/hymenoptera_data' # or GAPS
-    valdir = os.path.join(data_dir, 'val')
+    data_dir = 'data/GAPS' # or GAPS
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            #transforms.Scale(256),
-            transforms.CenterCrop(224),
+            # transforms.Scale(256),
+            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -123,9 +120,24 @@ def validate(val_loader, model, criterion):
     model.eval()
     
     # define a confusion_matrix
-    confusion_matrix = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_0 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_1 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_2 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_3 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_4 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_5 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_6 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_7 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_8 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_9 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_10 = meter.ConfusionMeter(args.num_classes)
 
     end = time.time()
+    cm = []
+
+    # define threshold to plot ROC and PR curve
+    threshold = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
@@ -137,13 +149,54 @@ def validate(val_loader, model, criterion):
         output = model(input_var)
         loss = criterion(output, target_var)
 
-        # convert output probabilities to predicted class
-        # _, pred_tensor = torch.max(output, 1)
-        # preds = np.squeeze(pred_tensor.cpu().numpy()) 
+        # convert output to softmax
+        s = F.softmax(output, dim=1)
 
         # update confusion matrix
-        confusion_matrix.add(output.data.squeeze(),target.long())
+        s_p = torch.sub(s,torch.tensor([float(0)]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_0.add(s_p.data.squeeze(),target.long())
 
+        s_p = torch.sub(s,torch.tensor([0.1]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_1.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.2]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_2.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.3]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_3.add(s_p.data.squeeze(),target.long()) 
+
+        s_p = torch.sub(s,torch.tensor([0.4]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_4.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.5]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_5.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.6]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_6.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.7]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_7.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.8]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_8.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([0.9]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_9.add(s_p.data.squeeze(),target.long())
+
+        s_p = torch.sub(s,torch.tensor([float(1)]))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        confusion_matrix_10.add(s_p.data.squeeze(),target.long())
+    
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0))
@@ -165,22 +218,59 @@ def validate(val_loader, model, criterion):
             'Loss {loss.avg:.4f}'
             .format(top1=top1, loss = losses))
     
-    cm_value = confusion_matrix.value()
-    acc = 0
+    cm.append(confusion_matrix_0) 
+    cm.append(confusion_matrix_1) 
+    cm.append(confusion_matrix_2)   
+    cm.append(confusion_matrix_3) 
+    cm.append(confusion_matrix_4) 
+    cm.append(confusion_matrix_5) 
+    cm.append(confusion_matrix_6)  
+    cm.append(confusion_matrix_7) 
+    cm.append(confusion_matrix_8) 
+    cm.append(confusion_matrix_9) 
+    cm.append(confusion_matrix_10) 
 
-    for i in range(args.num_classes):
-        acc += 100. * cm_value[i][i] / (cm_value.sum())
-    
-    precision = 100. * cm_value[0][0] / (cm_value[0][0] + cm_value[1][0])
-    recall = 100. * cm_value[0][0] / (cm_value[0][0] + cm_value[0][1])
-    F1 = 2 * (precision * recall) / (precision + recall)
-    
+    # cm_value = confusion_matrix.value()
+    acc = []
+    precision = []
+    recall = []
+    F1 = []
+    fpr = []
+    for i in range(len(threshold)):
+        cm_value = cm[i].value()
+        acc.append((cm_value[0][0]+cm_value[1][1]) / (cm_value.sum()))  
+        precision.append(cm_value[0][0] / (cm_value[0][0] + cm_value[1][0]))
+        recall.append(cm_value[0][0] / (cm_value[0][0] + cm_value[0][1]))
+        F1.append(2 * (precision[i] * recall[i]) / (precision[i] + recall[i]))
+        # tpr = recall
+        fpr.append(cm_value[1][0] / (cm_value[1][0] + cm_value[1][1]))
+
+    # plot ROC curve
+    plt.figure(figsize=(10,6))
+    plt.plot(fpr,recall,label="Resnet18 BD",linewidth=2)
+    plt.xlabel("False Positive Rate",fontsize=16)
+    plt.ylabel("True Positive Rate",fontsize=16)
+    plt.title("ROC Curve",fontsize=16)
+    plt.legend(loc="lower right",fontsize=16)
+    plt.savefig('roc.jpg')
+    plt.show()
+
+    # plot P-R curve
+    plt.figure(figsize=(10,6))
+    plt.plot(recall,precision,label="Resnet18 BD",linewidth=2)
+    plt.xlabel("Recall",fontsize=16)
+    plt.ylabel("Precision",fontsize=16)
+    plt.title("Precision Recall Curve",fontsize=17)
+    plt.legend(fontsize=16)
+    plt.savefig('pr.jpg')
+    plt.show()
+
     print(' * Accuracy@1 {top1:.3f}\t'
         'Loss {loss.avg:.4f}\t'
         'Presion {p:.3f}\t'
         'Recall {r:.3f}\t'
         'F1 score {F1:.3f}'
-        .format(top1=acc, loss = losses, p = precision, r = recall, F1 = F1))
+        .format(top1=acc[5], loss = losses, p = precision[5], r = recall[5], F1 = F1[5]))
     
 
     return top1.avg

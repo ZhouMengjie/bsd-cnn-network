@@ -148,6 +148,7 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
 
         # compute output
         output = model(input_var)
+        
         # convert output probabilities to predicted class
         _, pred_tensor = torch.max(output, 1)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
