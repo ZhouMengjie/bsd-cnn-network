@@ -153,7 +153,7 @@ def main():
     # plot P-R curve
     plt.figure(figsize=(10,6))
     plt.plot(recall_bd,precision_bd,label="Resnet18 BD",linewidth=2)
-    plt.plot(recall_jc,precision_jc,label="Resnet18 BD",linewidth=2)
+    plt.plot(recall_jc,precision_jc,label="Resnet18 JC",linewidth=2)
     plt.xlabel("Recall",fontsize=16)
     plt.ylabel("Precision",fontsize=16)
     plt.title("Precision Recall Curve",fontsize=17)
