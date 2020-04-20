@@ -205,7 +205,7 @@ def validate(val_loader, model, criterion):
         s = F.softmax(output, dim=1)
 
         # update confusion matrix
-        s_p = torch.sub(s,torch.tensor([float(0)]))
+        s_p = torch.sub(s,torch.tensor([0.0]))
         s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
         confusion_matrix_0.add(s_p.data.squeeze(),target.long())
 
@@ -245,7 +245,7 @@ def validate(val_loader, model, criterion):
         s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
         confusion_matrix_9.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([float(1)]))
+        s_p = torch.sub(s,torch.tensor([1.0]))
         s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
         confusion_matrix_10.add(s_p.data.squeeze(),target.long())
     
