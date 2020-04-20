@@ -77,7 +77,7 @@ def main():
     print(args)
 
     # load model
-    model_file = 'resnet18_best.pth.tar'
+    model_file = 'model_gap/resnet18_best.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -105,6 +105,7 @@ def main():
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+        
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss()
@@ -253,7 +254,7 @@ def validate(val_loader, model, criterion):
     plt.title("ROC Curve",fontsize=16)
     plt.legend(loc="lower right",fontsize=16)
     plt.savefig('roc.jpg')
-    plt.show()
+    # plt.show()
 
     # plot P-R curve
     plt.figure(figsize=(10,6))
@@ -263,7 +264,7 @@ def validate(val_loader, model, criterion):
     plt.title("Precision Recall Curve",fontsize=17)
     plt.legend(fontsize=16)
     plt.savefig('pr.jpg')
-    plt.show()
+    # plt.show()
 
     print(' * Accuracy@1 {top1:.3f}\t'
         'Loss {loss.avg:.4f}\t'
