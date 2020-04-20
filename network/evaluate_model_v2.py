@@ -205,48 +205,48 @@ def validate(val_loader, model, criterion):
         s = F.softmax(output, dim=1)
 
         # update confusion matrix
-        s_p = torch.sub(s,torch.tensor([0.0]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.0]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_0.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.1]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.1]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_1.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.2]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.2]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_2.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.3]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.3]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_3.add(s_p.data.squeeze(),target.long()) 
 
-        s_p = torch.sub(s,torch.tensor([0.4]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.4]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_4.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.5]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.5]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_5.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.6]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.6]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_6.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.7]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.7]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_7.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.8]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.8]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_8.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([0.9]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([0.9]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_9.add(s_p.data.squeeze(),target.long())
 
-        s_p = torch.sub(s,torch.tensor([1.0]))
-        s_p = torch.index_fill(s_p, 1, torch.tensor([1]),0)
+        s_p = torch.sub(s,torch.tensor([1.0]).to(device))
+        s_p = torch.index_fill(s_p, 1, torch.tensor([1]).to(device),0)
         confusion_matrix_10.add(s_p.data.squeeze(),target.long())
     
         # measure accuracy and record loss
