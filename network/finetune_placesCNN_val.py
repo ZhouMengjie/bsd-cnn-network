@@ -285,12 +285,12 @@ def validate(val_loader, model, criterion, epoch):
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        # input_var = torch.autograd.Variable(input)
+        # target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        output = model(input)
+        loss = criterion(output, target)
 
         confusion_matrix.add(output.squeeze(),target.long())
 
@@ -308,9 +308,11 @@ def validate(val_loader, model, criterion, epoch):
     writer.add_scalar('validation accuracy', top1.avg, epoch)
 
     cm_value = confusion_matrix.value()
+    acc = (cm_value[0][0]+cm_value[1][1]) / (cm_value.sum()) 
     precision = cm_value[0][0] / (cm_value[0][0] + cm_value[1][0])
     recall = cm_value[0][0] / (cm_value[0][0] + cm_value[0][1])
-    return top1.avg, precision, recall, losses.avg
+
+    return acc, precision, recall, losses.avg
 
 def save_checkpoint(state, is_acc, is_prec, is_rec, is_loss, filename='checkpoint.pth.tar'):
     if (not is_acc) & (not is_prec) & (not is_rec) & (not is_loss):
