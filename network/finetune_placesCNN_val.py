@@ -172,18 +172,22 @@ def main():
 
         # remember best prec and best loss and save checkpoint
         is_acc = acc > best_acc
+        print(is_acc)
         best_acc = max(acc, best_acc)
         
         is_loss = loss < best_loss
         best_loss = min(loss, best_loss)
+        print(is_loss)
 
         is_prec = prec > best_prec
         best_prec = max(prec, best_prec)
+        print(is_prec)
 
         is_rec = rec > best_rec
         best_rec = max(rec, best_rec)
+        print(is_rec)
 
-        if is_acc | is_loss | is_prec | is_rec:
+        if (is_acc) | (is_loss) | (is_prec) | (is_rec):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
@@ -306,7 +310,7 @@ def validate(val_loader, model, criterion, epoch):
     recall = cm_value[0][0] / (cm_value[0][0] + cm_value[0][1])
     return top1.avg, precision, recall, losses.avg
 
-def save_checkpoint(state, is_acc, is_prec, is_rec,is_loss, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_acc, is_prec, is_rec, is_loss, filename='checkpoint.pth.tar'):
     if (not is_acc) & (not is_prec) & (not is_rec) & (not is_loss):
         torch.save(state, filename + '_latest.pth.tar')
     if is_acc:
