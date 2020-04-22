@@ -178,6 +178,7 @@ def main():
         
         is_loss = loss < best_loss
         best_loss = min(loss, best_loss)
+        print(loss)
         print(is_loss)
 
         is_prec = prec > best_prec
