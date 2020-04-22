@@ -172,6 +172,7 @@ def main():
 
         # remember best prec and best loss and save checkpoint
         is_acc = acc > best_acc
+        print(acc)
         print(is_acc)
         best_acc = max(acc, best_acc)
         
@@ -283,12 +284,12 @@ def validate(val_loader, model, criterion, epoch):
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
-        # input_var = torch.autograd.Variable(input)
-        # target_var = torch.autograd.Variable(target)
+        input_var = torch.autograd.Variable(input)
+        target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input)
-        loss = criterion(output, target)
+        output = model(input_var)
+        loss = criterion(output, target_var)
 
         confusion_matrix.add(output.squeeze(),target.long())
 
