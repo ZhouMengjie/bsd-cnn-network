@@ -29,6 +29,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+import torchnet.meter as meter
 # from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 
@@ -72,18 +73,20 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/test')
+writer = SummaryWriter('runs/resnet18/jc_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
 else:
     device = torch.device('cpu')
 
+best_acc = 0
 best_prec = 0
+best_rec = 0
 best_loss = 100
 
 def main():
-    global args, device, writer, best_prec, best_loss
+    global args, device, writer, best_prec, best_loss, best_acc, best_rec
     args = parser.parse_args()
     print(args)
 
@@ -111,6 +114,8 @@ def main():
         args.start_epoch = 0 #checkpoint['epoch']
         best_prec = checkpoint['best_prec']
         best_loss = checkpoint['best_loss']
+        best_acc = checkpoint['best_acc']
+        best_rec = checkpoint['best_rec']
         model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
@@ -119,9 +124,9 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'val')
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -140,7 +145,7 @@ def main():
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             # transforms.Resize(256),
-            transforms.CenterCrop(224),
+            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -163,22 +168,31 @@ def main():
 
         # evaluate on validation set
         with torch.no_grad():
-            prec, loss = validate(val_loader, model, criterion, epoch)
+            acc, prec, rec, loss = validate(val_loader, model, criterion, epoch)
 
         # remember best prec and best loss and save checkpoint
-        is_best = prec > best_prec
-        best_prec = max(prec, best_prec)
+        is_acc = acc > best_acc
+        best_acc = max(acc, best_acc)
         
-        is_lowest = loss < best_loss
+        is_loss = loss < best_loss
         best_loss = min(loss, best_loss)
-        if is_best | is_lowest:
+
+        is_prec = prec > best_prec
+        best_prec = max(prec, best_prec)
+
+        is_rec = rec > best_rec
+        best_rec = max(rec, best_rec)
+
+        if is_acc | is_loss | is_prec | is_rec:
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
+                'best_acc': best_acc,
                 'best_prec': best_prec,
+                'best_rec': best_rec,
                 'best_loss': best_loss
-            }, is_best, is_lowest, args.arch.lower())     
+            }, is_acc, is_prec, is_rec, is_loss, args.arch.lower())     
 
        
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -186,8 +200,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
     data_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    is_best = False
-    is_lowest = False
+    is_acc = False
+    is_prec = False
+    is_rec = False
+    is_loss = False
 
 
     # switch to train mode
@@ -246,7 +262,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                 'state_dict': model.state_dict(),
                 'best_prec': losses.avg,
                 'best_loss': top1.avg
-            }, is_best, is_lowest, 'net'+ str(args.num_save))
+            }, is_acc, is_prec, is_rec, is_loss,'net'+ str(args.num_save))
             if args.num_save == 5:
                 args.num_save = 0
 
@@ -257,15 +273,20 @@ def validate(val_loader, model, criterion, epoch):
     # switch to evaluate mode
     model.eval()
 
+    # define a confusion_matrix
+    confusion_matrix = meter.ConfusionMeter(args.num_classes)
+
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        # input_var = torch.autograd.Variable(input)
+        # target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        output = model(input)
+        loss = criterion(output, target)
+
+        confusion_matrix.add(output.squeeze(),target.long())
 
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
@@ -279,15 +300,23 @@ def validate(val_loader, model, criterion, epoch):
     
     writer.add_scalar('validation loss', losses.avg, epoch)
     writer.add_scalar('validation accuracy', top1.avg, epoch)
-    return top1.avg, losses.avg
 
-def save_checkpoint(state, is_best, is_lowest, filename='checkpoint.pth.tar'):
-    if (not is_best) & (not is_lowest):
+    cm_value = confusion_matrix.value()
+    precision = cm_value[0][0] / (cm_value[0][0] + cm_value[1][0])
+    recall = cm_value[0][0] / (cm_value[0][0] + cm_value[0][1])
+    return top1.avg, precision, recall, losses.avg
+
+def save_checkpoint(state, is_acc, is_prec, is_rec,is_loss, filename='checkpoint.pth.tar'):
+    if (not is_acc) & (not is_prec) & (not is_rec) & (not is_loss):
         torch.save(state, filename + '_latest.pth.tar')
-    if is_best:
-        torch.save(state, filename + '_best.pth.tar')
-    if is_lowest:
-        torch.save(state, filename + '_lowest.pth.tar')
+    if is_acc:
+        torch.save(state, filename + '_accuracy.pth.tar')
+    if is_prec:
+        torch.save(state, filename + '_precision.pth.tar') 
+    if is_rec:
+        torch.save(state, filename + '_recall.pth.tar')          
+    if is_loss:
+        torch.save(state, filename + '_loss.pth.tar')
 
 
 
