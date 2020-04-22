@@ -112,8 +112,8 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/small' # or GAPS
-    valdir = os.path.join(data_dir, 'val')
+    data_dir = 'data/JUNCTIONS' # or GAPS
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
