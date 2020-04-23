@@ -21,8 +21,8 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
-import matplotlib.pyplot as plt
-# from torch.utils.tensorboard import SummaryWriter
+import matplotlib.cm as cm
+from grad_cam import(BackPropagation, Deconvnet, GradCAM, GuidedBackPropagation, occlusion_sensitivity)
 from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__
@@ -72,41 +72,42 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-
-class FeatureExtractor(nn.Module):
-    def __init__(self, submodule, extracted_layers):
-        super(FeatureExtractor, self).__init__()
-        self.submodule = submodule
-        self.extracted_layers = extracted_layers
-
-    def forward(self, x):
-        outputs = {}
-        for name, module in self.submodule._modules.items():
-            if "fc" in name:
-                x = x.view(x.size(0),-1)
-
-            x = module(x)
-            # print(name)
-            if self.extracted_layers is None or name in self.extracted_layers:
-                outputs[name] = x
-
-        return outputs
-
 def make_dirs(path):
     if os.path.exists(path) is False:
         os.makedirs(path)
 
-def imshow(inp, title=None):
-    """Imshow for Tensor."""
-    inp = inp.numpy().transpose((1, 2, 0))
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
-    inp = np.clip(inp, 0, 1)
-    plt.imshow(inp)
-    if title is not None:
-        plt.title(title)
-    plt.pause(10)  # pause a bit so that plots are updated
+def preprocess(image_path):
+    image_path = image_path[0]
+    raw_image = cv2.imread(image_path)
+    raw_image = cv2.resize(raw_image, (224,) * 2)
+    image = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )(raw_image[..., ::-1].copy())
+    return image, raw_image
+
+def load_images(image_paths):
+    images = []
+    raw_images = []
+    print("Images:")
+    for i, image_path in enumerate(image_paths):
+        print("\t#{}: {}".format(i, image_path))
+        image, raw_image = preprocess(image_path)
+        images.append(image)
+        raw_images.append(raw_image)
+    return images, raw_images
+
+def save_gradcam(filename, gcam, raw_image, paper_cmap=False):
+    gcam = gcam.cpu().numpy()
+    cmap = cm.jet_r(gcam)[..., :3] * 255.0
+    if paper_cmap:
+        alpha = gcam[..., None]
+        gcam = alpha * cmap + (1 - alpha) * raw_image
+    else:
+        gcam = (cmap.astype(np.float) + raw_image.astype(np.float)) / 2
+    cv2.imwrite(filename, np.uint8(gcam))
 
 def main():
     global args, best_prec1
@@ -128,71 +129,58 @@ def main():
 
     # Data loading code
     data_dir = 'data/small' # or GAPS
-    valdir = os.path.join(data_dir, 'val')
+    subarea = 'val'
+    image_datasets = torchvision.datasets.ImageFolder(os.path.join(data_dir, subarea))
+    image_paths = image_datasets.imgs
+    targets = image_datasets.targets
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    # Images
+    images, raw_images = load_images(image_paths)
+    images = torch.stack(images).to(device)
+          
+    # load classes
+    classes= ["junctions", "non_junctions"]
+    output_dir = 'Grad_CAM'
+    make_dirs(output_dir)
 
-    val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Scale(256),
-            # transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ])),
-        batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True)
-        
-    print(len(val_loader))
-    # define loss function (criterion) and pptimizer
-    criterion = nn.CrossEntropyLoss()
-    validate(val_loader, model, criterion)
-
-
-def validate(val_loader, model, criterion):
-    # extract_list = ["layer4", "avgpool", "fc"]
-    extract_list = ["layer1","layer2","layer3","layer4"]
-    class_names = ["junctions", "non_junctions"]
     # switch to evaluate mode
     model.eval()
-    dst = './feauture_maps'
-    therd_size = 224
 
-    for i, (input, target) in enumerate(val_loader):
-        input = input.to(device)
-        target = target.to(device)
+    # the four resisual layers
+    target_layers = ["relu", "layer1", "layer2", "layer3", "layer4"]
+    target_class = 0
 
-        # generate feature map
-        fc_etxractor = FeatureExtractor(model, extract_list)
-        with torch.no_grad():
-            extracted_results = fc_etxractor(input)
+    gcam = GradCAM(model = model)
+    probs, ids = gcam.forward(images)
+    ids_ = torch.LongTensor([[target_class]] * len(images)).to(device)
+    gcam.backward(ids = ids_)
 
-        for k, v in extracted_results.items():
-            features = v[0]
-            iter_range = features.shape[0]
-            for j in range(iter_range):
-                if "fc" in k:
-                    continue
-            
-                feature = features.data.numpy()
-                feature_img = feature[j, :, :]
-                feature_img = np.asarray(feature_img * 256, dtype = np.uint8)
-                dst_path = os.path.join(dst, k)
+    for target_layer in target_layers:
+        print("Generating Grad-CAM @{}".format(target_layer))
+        
+        # Grad-CAM
+        regions = gcam.generate(target_layer=target_layer)
 
-                make_dirs(dst_path)
-                feature_img = cv2.applyColorMap(feature_img, cv2.COLORMAP_JET)
-                if feature_img.shape[0] < therd_size:
-                    tmp_file = os.path.join(dst_path, str(j) + '_' + str(therd_size) + '.png')
-                    tmp_img = feature_img.copy()
-                    tmp_img = cv2.resize(tmp_img, (therd_size, therd_size), interpolation = cv2.INTER_NEAREST)
-                    cv2.imwrite(tmp_file, tmp_img)
+        for j in range(len(images)):
+            p = probs[j][ids[j][:] == target_class]
+            print(
+                "\t#{}: {} ({:.5f})".format(
+                    j, classes[target_class], float(p)
+                )
+            )
 
-                # dst_file = os.path.join(dst_path, str(i) + '.png')
-                # cv2.imwrite(dst_file, feature_img)
-            
-        out = torchvision.utils.make_grid(input)
-        print(target)
-        imshow(out, title=[class_names[target]]) 
+            save_gradcam(
+                filename=os.path.join(
+                    output_dir,
+                    "{}-{}-gradcam-{}-{}.png".format(
+                        j, "resnet18", target_layer, classes[target_class]
+                    ),
+                ),
+                gcam=regions[j, 0],
+                raw_image=raw_images[j],
+            )
+
+       
 
 
 if __name__ == '__main__':
