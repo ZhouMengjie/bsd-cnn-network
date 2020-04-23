@@ -1,2 +1,0 @@
-/n/non_junctions 0
-/j/junctions 1
