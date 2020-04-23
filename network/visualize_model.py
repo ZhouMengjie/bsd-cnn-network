@@ -137,8 +137,8 @@ def main():
 def validate(val_loader, model, criterion):
     classes = ('junctions','non_junctions')
     extract_list = ["layer4", "avgpool", "fc"]
-    features = torch.FloatTensor()
-    imgs = torch.FloatTensor()
+    features = torch.FloatTensor().to(device)
+    imgs = torch.FloatTensor().to(device)
     class_labels = []
     # class_preds = []
     batch_time = AverageMeter()
