@@ -140,7 +140,7 @@ def validate(val_loader, model, criterion):
     features = torch.FloatTensor()
     imgs = torch.FloatTensor()
     class_labels = []
-    class_preds = []
+    # class_preds = []
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -171,9 +171,9 @@ def validate(val_loader, model, criterion):
         loss = criterion(output, target)
 
         # convert output probabilities to predicted class
-        _, pred_tensor = torch.max(output, 1)
-        preds = np.squeeze(pred_tensor.cpu().numpy()) 
-        class_preds.append(classes[preds])
+        # _, pred_tensor = torch.max(output, 1)
+        # preds = np.squeeze(pred_tensor.cpu().numpy()) 
+        # class_preds.append(classes[preds])
 
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
@@ -199,7 +199,7 @@ def validate(val_loader, model, criterion):
     features_1 = imgs.view(-1,224*224*3)
     writer_1.add_embedding(features_1,metadata=class_labels, label_img=imgs)
     features_2 = torch.squeeze(features)
-    writer_2.add_embedding(features_2,metadata=class_preds, label_img=imgs)
+    writer_2.add_embedding(features_2,metadata=class_labels, label_img=imgs)
 
     return top1.avg
 
