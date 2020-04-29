@@ -133,10 +133,6 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            # transforms.RandomResizedCrop(224),
-            # transforms.RandomRotation(30),
-            # transforms.ColorJitter(brightness=0.5),
-            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -145,8 +141,6 @@ def main():
     # print(len(train_loader))
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Resize(256),
-            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
