@@ -123,11 +123,9 @@ snaps_directory_junction = os.path.join(directory, 'network', 'data', 'JUNCTIONS
 snaps_directory_gap = os.path.join(directory, 'network', 'data', 'GAPS', dataset) 
 if not os.path.isdir(snaps_directory_junction):
     os.makedirs(snaps_directory_junction)
-    # os.mkdir(snaps_directory_junction)
 
 if not os.path.isdir(snaps_directory_gap):
     os.makedirs(snaps_directory_gap)
-    # os.mkdir(snaps_directory_gap)
 
 # Open matlab file
 filename = os.path.join(os.getcwd(), 'data', dataset + '.csv')

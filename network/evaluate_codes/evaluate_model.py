@@ -152,6 +152,8 @@ def validate(val_loader, model, criterion):
 
         # convert output to softmax
         s = F.softmax(output, dim=1)
+        ss = F.sigmoid(output)
+        # ss = F.log_softmax(output, 1)
 
         # update confusion matrix
         s_p = torch.sub(s,torch.tensor([float(0)]))
