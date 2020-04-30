@@ -30,7 +30,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
-# from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 
 model_names = sorted(name for name in models.__dict__
@@ -120,7 +119,7 @@ parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=16, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
@@ -144,7 +143,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18/bd_all_index')
+writer = SummaryWriter('runs/resnet18/jc_ghmc')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -155,9 +154,10 @@ best_acc = 0
 best_prec = 0
 best_rec = 0
 best_loss = 100
+best_F1 = 0
 
 def main():
-    global args, device, writer, best_prec, best_loss, best_acc, best_rec
+    global args, device, writer, best_prec, best_loss, best_acc, best_rec, best_F1
     args = parser.parse_args()
     print(args)
 
@@ -176,7 +176,7 @@ def main():
     state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
     model.load_state_dict(state_dict, strict=False)   
 
-    # print(model)
+    print(model)
 
     if args.resume:
         model_file = 'checkpoint1.pth.tar'
@@ -187,6 +187,7 @@ def main():
         best_loss = checkpoint['best_loss']
         best_acc = checkpoint['best_acc']
         best_rec = checkpoint['best_rec']
+        best_F1 = checkpoint['best_F1']
         model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
@@ -204,18 +205,14 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
             transforms.RandomResizedCrop(224),
-            # transforms.RandomRotation(30),
-            # transforms.ColorJitter(brightness=0.5),
-            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
-    # print(len(train_loader))
+
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
@@ -226,42 +223,34 @@ def main():
 
     # define loss function (criterion) and pptimizer
     criterion = GHMC(bins = 30, momentum = 0.75).to(device)
-    # criterion = nn.CrossEntropyLoss().cuda()  
-    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
-    #                             momentum=args.momentum,
-    #                             weight_decay=args.weight_decay)
     optimizer = torch.optim.Adam(model.parameters())
 
     # set tf logger for tensorboard
     for epoch in range(args.start_epoch, args.epochs):   
         # train for one epoch
-        # adjust_learning_rate(optimizer, epoch)
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
         with torch.no_grad():
-            acc, prec, rec, loss = validate(val_loader, model, criterion, epoch)
+            acc, prec, rec, F1, loss = validate(val_loader, model, criterion, epoch)
 
         # remember best prec and best loss and save checkpoint
-        is_acc = acc > best_acc
-        print(acc)                      
-        print(is_acc)                       
+        is_acc = acc > best_acc                     
         best_acc = max(acc, best_acc)
         
         is_loss = loss < best_loss
         best_loss = min(loss, best_loss)
-        print(loss)
-        print(is_loss)
 
         is_prec = prec > best_prec
         best_prec = max(prec, best_prec)
-        print(is_prec)
 
         is_rec = rec > best_rec
         best_rec = max(rec, best_rec)
-        print(is_rec)
 
-        if (is_acc) | (is_loss) | (is_prec) | (is_rec):
+        is_F1 = F1 > best_F1
+        best_F1 = max(F1, best_F1)
+
+        if (is_acc) | (is_loss) | (is_prec) | (is_rec) | (is_F1):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
@@ -269,8 +258,9 @@ def main():
                 'best_acc': best_acc,
                 'best_prec': best_prec,
                 'best_rec': best_rec,
+                'best_F1': best_F1,
                 'best_loss': best_loss
-            }, is_acc, is_prec, is_rec, is_loss, args.arch.lower())     
+            }, is_acc, is_prec, is_rec, is_F1, is_loss, args.arch.lower())     
 
        
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -282,6 +272,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     is_prec = False
     is_rec = False
     is_loss = False
+    is_F1 = False
 
 
     # switch to train mode
@@ -297,10 +288,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = target.to(device)
         input_var = torch.autograd.Variable(input)
         target_var = torch.autograd.Variable(target)
+        
         # compute output
         output = model(input_var)
-        # loss = criterion(output, target_var)
-        #label_weight [batch_num, class_num]:
         #the value is 1 if the sample is valid and 0 if ignored.
         label_weight = torch.ones_like(output)
         loss = criterion(output,target_var,label_weight)
@@ -342,9 +332,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
                 'epoch': epoch,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-                'best_prec': losses.avg,
+                'best_acc': losses.avg,
                 'best_loss': top1.avg
-            }, is_acc, is_prec, is_rec, is_loss,'net'+ str(args.num_save))
+            }, is_acc, is_prec, is_rec, is_F1, is_loss,'net'+ str(args.num_save))
             if args.num_save == 5:
                 args.num_save = 0
 
@@ -361,12 +351,14 @@ def validate(val_loader, model, criterion, epoch):
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
+        input_var = torch.autograd.Variable(input)
+        target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input)
-        # loss = criterion(output, target)
+        output = model(input_var)
+
         label_weight = torch.ones_like(output)
-        loss = criterion(output,target,label_weight)
+        loss = criterion(output,target_var,label_weight)
 
         confusion_matrix.add(output.squeeze(),target.long())
 
@@ -387,10 +379,11 @@ def validate(val_loader, model, criterion, epoch):
     acc = (cm_value[0][0]+cm_value[1][1]) / (cm_value.sum()) 
     precision = cm_value[0][0] / (cm_value[0][0] + cm_value[1][0])
     recall = cm_value[0][0] / (cm_value[0][0] + cm_value[0][1])
+    F1 = 2 * precision * recall / (precision + recall)    
 
-    return acc, precision, recall, losses.avg
+    return acc, precision, recall, F1, losses.avg
 
-def save_checkpoint(state, is_acc, is_prec, is_rec, is_loss, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_acc, is_prec, is_rec, is_F1, is_loss, filename='checkpoint.pth.tar'):
     if (not is_acc) & (not is_prec) & (not is_rec) & (not is_loss):
         torch.save(state, filename + '_latest.pth.tar')
     if is_acc:
@@ -398,7 +391,9 @@ def save_checkpoint(state, is_acc, is_prec, is_rec, is_loss, filename='checkpoin
     if is_prec:
         torch.save(state, filename + '_precision.pth.tar') 
     if is_rec:
-        torch.save(state, filename + '_recall.pth.tar')          
+        torch.save(state, filename + '_recall.pth.tar')   
+    if is_F1:
+        torch.save(state, filename + '_F1.pth.tar')         
     if is_loss:
         torch.save(state, filename + '_loss.pth.tar')
 

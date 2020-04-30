@@ -20,7 +20,6 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
 import matplotlib.pyplot as plt
-# from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__

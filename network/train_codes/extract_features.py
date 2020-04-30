@@ -17,7 +17,6 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-# from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 import pdb
 import scipy.io
@@ -62,7 +61,6 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-best_prec1 = 0
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -71,7 +69,7 @@ else:
 
 
 def main():
-    global args, best_prec1
+    global args
     args = parser.parse_args()
     print(args)
 
@@ -101,8 +99,6 @@ def main():
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            #transforms.Scale(256),
-            #transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -110,18 +106,19 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
     print(len(val_loader))
+
     # define loss function (criterion) and pptimizer
     data_transforms = {sub_area: transforms.Compose([transforms.ToTensor(),normalize,]),}
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                     for x in [sub_area]}  
     img_paths = image_datasets[sub_area].imgs
-    panoids = [None] * len(val_loader)
 
+    panoids = [None] * len(val_loader)
     features = [None] * len(val_loader)
     criterion = nn.CrossEntropyLoss()
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
-    #print(features)
+
     
     scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
     scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'panoids': panoids})
@@ -156,10 +153,10 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         re_str = img_paths[i][0]   
         result = re.findall('[^/]+',re_str)
         panoids[i] = result[4]
-        print(panoids[i])
+        # print(panoids[i])
         # pred_lable = classes[preds]
         # print(preds)
-        #print(pred_lable)
+        # print(pred_lable)
 
         # measure accuracy and record loss
         loss = criterion(output, target_var)
@@ -182,7 +179,7 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))
 
-    return features,panoids
+    return features, panoids
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

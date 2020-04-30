@@ -17,7 +17,6 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-# from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__
@@ -60,7 +59,6 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-best_prec1 = 0
 
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
@@ -70,7 +68,7 @@ else:
 
 
 def main():
-    global args, best_prec1
+    global args
     args = parser.parse_args()
     print(args)
 
@@ -98,13 +96,12 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            #transforms.Scale(256),
-            #transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+
     print(len(val_loader))
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss()
@@ -149,9 +146,8 @@ def validate(val_loader, model, criterion):
 
     print(' * Prec@1 {top1.avg:.3f}\t'
             'Loss {loss.avg:.4f}'
-            .format(top1=top1, loss = losses))
-
-    return top1.avg
+            .format(top1=top1, loss=losses))
+            
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
