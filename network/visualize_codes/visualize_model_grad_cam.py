@@ -25,6 +25,7 @@ import matplotlib.cm as cm
 from grad_cam import(BackPropagation, Deconvnet, GradCAM, GuidedBackPropagation, occlusion_sensitivity)
 from tensorboardX import SummaryWriter
 import pdb
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -63,8 +64,6 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
                     help='inital number of the checkpoint')
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
-
-best_prec1 = 0
 
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
@@ -110,12 +109,12 @@ def save_gradcam(filename, gcam, raw_image, paper_cmap=False):
     cv2.imwrite(filename, np.uint8(gcam))
 
 def main():
-    global args, best_prec1
+    global args
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     # load model
-    model_file = 'model_gap/resnet18_best.pth.tar'
+    model_file = 'model_junction/resnet18_best.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -128,7 +127,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/bd' # or GAPS
+    data_dir = 'data/jc' # or GAPS
     subarea = 'val'
     image_datasets = torchvision.datasets.ImageFolder(os.path.join(data_dir, subarea))
     image_paths = image_datasets.imgs
@@ -139,16 +138,16 @@ def main():
     images = torch.stack(images).to(device)
           
     # load classes
-    # classes= ["junctions", "non_junctions"]
-    classes= ["gaps", "non_gaps"]
-    output_dir = 'Grad_CAM/bd'
+    classes= ["junctions", "non_junctions"]
+    # classes= ["gaps", "non_gaps"]
+    output_dir = 'Grad_CAM/jc'
     make_dirs(output_dir)
 
     # switch to evaluate mode
     model.eval()
 
     # the four resisual layers
-    target_layers = ["relu", "layer1", "layer2", "layer3", "layer4"]
+    target_layers = ["layer1", "layer2", "layer3", "layer4"]
     target_class = 0
 
     gcam = GradCAM(model = model)
@@ -182,7 +181,5 @@ def main():
             )
 
        
-
-
 if __name__ == '__main__':
     main()

@@ -22,7 +22,6 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
 import matplotlib.pyplot as plt
-# from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 import pdb
 model_names = sorted(name for name in models.__dict__
@@ -64,8 +63,6 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-best_prec1 = 0
-
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -89,7 +86,6 @@ class FeatureExtractor(nn.Module):
             # print(name)
             if self.extracted_layers is None or name in self.extracted_layers:
                 outputs[name] = x
-
         return outputs
 
 def make_dirs(path):
@@ -109,9 +105,9 @@ def imshow(inp, title=None):
     plt.pause(10)  # pause a bit so that plots are updated
 
 def main():
-    global args, best_prec1
+    global args
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     # load model
     model_file = 'model_junction/resnet18_best.pth.tar'
@@ -127,16 +123,14 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/small' # or GAPS
-    valdir = os.path.join(data_dir, 'val')
+    data_dir = 'data/JUNCTIONS' # or GAPS
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Scale(256),
-            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -144,15 +138,14 @@ def main():
         num_workers=args.workers, pin_memory=True)
         
     print(len(val_loader))
-    # define loss function (criterion) and pptimizer
-    criterion = nn.CrossEntropyLoss()
-    validate(val_loader, model, criterion)
+
+    validate(val_loader, model)
 
 
-def validate(val_loader, model, criterion):
-    # extract_list = ["layer4", "avgpool", "fc"]
+def validate(val_loader, model):
     extract_list = ["layer1","layer2","layer3","layer4"]
     class_names = ["junctions", "non_junctions"]
+
     # switch to evaluate mode
     model.eval()
     dst = './feauture_maps'
@@ -193,7 +186,6 @@ def validate(val_loader, model, criterion):
         out = torchvision.utils.make_grid(input)
         print(target)
         imshow(out, title=[class_names[target]]) 
-
 
 if __name__ == '__main__':
     main()

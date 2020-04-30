@@ -37,7 +37,7 @@ parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=64, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
@@ -61,8 +61,6 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-best_prec1 = 0
-
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -71,7 +69,7 @@ else:
 
 
 def main():
-    global args, best_prec1
+    global args
     args = parser.parse_args()
     print(args)
 
@@ -81,7 +79,7 @@ def main():
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
-    print(model) 
+    # print(model) 
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
@@ -97,14 +95,14 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Scale(256),
-            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
-    # print(len(val_loader))
+
+    print(len(val_loader))
+
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss()
     precision_bd, recall_bd, fpr_bd = validate(val_loader, model, criterion)
@@ -116,7 +114,7 @@ def main():
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
-    print(model) 
+    # print(model) 
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
@@ -128,8 +126,6 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            # transforms.Scale(256),
-            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -267,7 +263,7 @@ def validate(val_loader, model, criterion):
 
     print(' * Prec@1 {top1.avg:.3f}\t'
             'Loss {loss.avg:.4f}'
-            .format(top1=top1, loss = losses))
+            .format(top1=top1, loss=losses))
     
     cm.append(confusion_matrix_0) 
     cm.append(confusion_matrix_1) 
@@ -281,7 +277,6 @@ def validate(val_loader, model, criterion):
     cm.append(confusion_matrix_9) 
     cm.append(confusion_matrix_10) 
 
-    # cm_value = confusion_matrix.value()
     acc = []
     precision = []
     recall = []
@@ -293,15 +288,16 @@ def validate(val_loader, model, criterion):
         precision.append(cm_value[0][0] / (cm_value[0][0] + cm_value[1][0]))
         recall.append(cm_value[0][0] / (cm_value[0][0] + cm_value[0][1]))
         F1.append(2 * (precision[i] * recall[i]) / (precision[i] + recall[i]))
-        # tpr = recall
+        # tpr = recall fpr = 1 - specificity
         fpr.append(cm_value[1][0] / (cm_value[1][0] + cm_value[1][1]))
 
     print(' * Accuracy@1 {top1:.3f}\t'
         'Loss {loss.avg:.4f}\t'
         'Presion {p:.3f}\t'
         'Recall {r:.3f}\t'
-        'F1 score {F1:.3f}'
-        .format(top1=acc[5], loss = losses, p = precision[5], r = recall[5], F1 = F1[5]))   
+        'F1 score {F1:.3f}\t'
+        'Specificity {s:.3f}'
+        .format(top1=acc[5], loss=losses, p=precision[5], r=recall[5], F1=F1[5]), s=1-fpr[5])   
 
     return precision, recall, fpr
 
