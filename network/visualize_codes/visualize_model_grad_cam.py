@@ -114,7 +114,7 @@ def main():
     # print(args)
 
     # load model
-    model_file = 'model_junction/resnet18_best.pth.tar'
+    model_file = 'model_junction/resnet18_accuracy.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -127,7 +127,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/jc' # or GAPS
+    data_dir = 'data/njc' # or GAPS
     subarea = 'val'
     image_datasets = torchvision.datasets.ImageFolder(os.path.join(data_dir, subarea))
     image_paths = image_datasets.imgs
@@ -140,7 +140,7 @@ def main():
     # load classes
     classes= ["junctions", "non_junctions"]
     # classes= ["gaps", "non_gaps"]
-    output_dir = 'Grad_CAM/jc'
+    output_dir = 'Grad_CAM/njc'
     make_dirs(output_dir)
 
     # switch to evaluate mode
@@ -148,7 +148,7 @@ def main():
 
     # the four resisual layers
     target_layers = ["layer1", "layer2", "layer3", "layer4"]
-    target_class = 0
+    target_class = 1
 
     gcam = GradCAM(model = model)
     probs, ids = gcam.forward(images)

@@ -142,7 +142,7 @@ def main():
     plt.ylabel("True Positive Rate",fontsize=16)
     plt.title("ROC Curve",fontsize=16)
     plt.legend(loc="lower right",fontsize=16)
-    plt.savefig('roc.jpg')
+    plt.savefig('roc.png')
     # plt.show()
 
     # plot P-R curve
@@ -153,7 +153,7 @@ def main():
     plt.ylabel("Precision",fontsize=16)
     plt.title("Precision Recall Curve",fontsize=17)
     plt.legend(fontsize=16)
-    plt.savefig('pr.jpg')
+    plt.savefig('pr.png')
     # plt.show()
 
 
