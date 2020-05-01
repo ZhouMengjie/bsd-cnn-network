@@ -1,3 +1,4 @@
 /bsd-cnn-network/network/data/
 network/data/GAPS/hudsonriver5k/gaps/-164dgq7aASttJfoqQBW8Q_right.jpg
 *.jpg
+.DS_Store
