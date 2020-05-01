@@ -159,7 +159,7 @@ best_F1 = 0
 def main():
     global args, device, writer, best_prec, best_loss, best_acc, best_rec, best_F1
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     # load the pre-trained weights
     model_file = '%s_places365.pth.tar' % args.arch
@@ -196,15 +196,14 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/hymenoptera_data' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'val')
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            transforms.RandomResizedCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -213,7 +212,6 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -273,7 +271,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
     is_rec = False
     is_loss = False
     is_F1 = False
-
 
     # switch to train mode
     model.train()
