@@ -349,7 +349,7 @@ def validate(val_loader, model, criterion, epoch):
     model.eval()
 
     # define a confusion_matrix
-    confusion_matrix = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix = meter.ConfusionMeter(2) # real num of clasess
 
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
