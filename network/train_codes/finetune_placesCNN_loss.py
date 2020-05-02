@@ -288,12 +288,18 @@ def train(train_loader, model, criterion, optimizer, epoch):
         
         # compute output
         output = model(input_var)
+
+        # transfer out to p = sigmoid(x)
+        pred1 = output.sigmoid().detach() # p(y=1|x)
+        pred0 = 1 - pred1
+        pred = torch.cat((pred0, pred1),dim=1)
+
         #the value is 1 if the sample is valid and 0 if ignored.
         label_weight = torch.ones_like(output)
         loss = criterion(output,target_var,label_weight)
 
         # measure accuracy and record loss
-        prec1 = accuracy(output.data, target, topk=(1, ))
+        prec1 = accuracy(pred.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0)) # input.size(0) = batch_size
         top1.update(prec1[0], input.size(0))
 
@@ -354,13 +360,18 @@ def validate(val_loader, model, criterion, epoch):
         # compute output
         output = model(input_var)
 
+        # transfer out to p = sigmoid(x)
+        pred1 = output.sigmoid().detach() # p(y=1|x)
+        pred0 = 1 - pred1
+        pred = torch.cat((pred0, pred1),dim=1)
+
         label_weight = torch.ones_like(output)
         loss = criterion(output,target_var,label_weight)
 
-        confusion_matrix.add(output.squeeze(),target.long())
+        confusion_matrix.add(pred.squeeze(),target.long())
 
         # measure accuracy and record loss
-        prec1 = accuracy(output.data, target, topk=(1, ))
+        prec1 = accuracy(pred.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
 
