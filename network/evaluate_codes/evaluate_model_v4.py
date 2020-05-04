@@ -146,7 +146,7 @@ def main():
     # Data loading code
     data_dir = 'data/JUNCTIONS' # or GAPS
     valdir = os.path.join(data_dir, 'unionsquare5k')
-    main_directory = 'model_jc_loss/'
+    main_directory = 'model_junction_loss/'
     ROC_names = 'ROC_jc_ghmc_uq.png'
     PR_names = 'PR_jc_ghmc_uq.png'
 
