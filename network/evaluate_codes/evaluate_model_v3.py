@@ -107,6 +107,7 @@ def main():
     model = model.to(device)
 
     precision_acc, recall_acc, fpr_acc = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
 
 
     # load model
@@ -123,6 +124,7 @@ def main():
     model = model.to(device)
 
     precision_prec, recall_prec, fpr_prec = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
 
     # load model
     model_file = 'model_junction/resnet18_recall.pth.tar'
@@ -138,6 +140,7 @@ def main():
     model = model.to(device)
 
     precision_rec, recall_rec, fpr_rec = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
 
     # load model
     model_file = 'model_junction/resnet18_F1.pth.tar'
@@ -153,6 +156,7 @@ def main():
     model = model.to(device)
 
     precision_f1, recall_f1, fpr_f1 = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
 
 
     # load model
@@ -169,6 +173,7 @@ def main():
     model = model.to(device)
 
     precision_loss, recall_loss, fpr_loss = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
 
 
     # plot ROC curve
