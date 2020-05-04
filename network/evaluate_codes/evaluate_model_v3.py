@@ -75,10 +75,10 @@ def main():
 
     # Data loading code
     data_dir = 'data/JUNCTIONS' # or GAPS
-    valdir = os.path.join(data_dir, 'hudsonriver5k')
-    main_directory = 'model_junction_loss/'
-    ROC_names = 'ROC_jc_ghmc_hd.png'
-    PR_names = 'PR_jc_ghmc_hd.png'
+    valdir = os.path.join(data_dir, 'wallstreet5k')
+    main_directory = 'model_junction/'
+    ROC_names = 'ROC_jc_ws.png'
+    PR_names = 'PR_jc_ws.png'
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
