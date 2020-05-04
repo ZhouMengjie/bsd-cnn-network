@@ -297,7 +297,7 @@ def validate(val_loader, model, criterion):
         'Recall {r:.3f}\t'
         'F1 score {F1:.3f}\t'
         'Specificity {s:.3f}'
-        .format(top1=acc[5], loss=losses, p=precision[5], r=recall[5], F1=F1[5]), s=1-fpr[5])   
+        .format(top1=acc[5], loss=losses, p=precision[5], r=recall[5], F1=F1[5], s=1-fpr[5]))  
 
     return precision, recall, fpr
 

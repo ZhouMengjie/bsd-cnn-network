@@ -296,13 +296,13 @@ def validate(val_loader, model, criterion):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % args.print_freq == 0:
-            print('Test: [{0}/{1}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   top1=top1))
+        # if i % args.print_freq == 0:
+        #     print('Test: [{0}/{1}]\t'
+        #           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+        #           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+        #           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+        #            i, len(val_loader), batch_time=batch_time, loss=losses,
+        #            top1=top1))
 
     print(' * Prec@1 {top1.avg:.3f}\t'
             'Loss {loss.avg:.4f}'
@@ -340,7 +340,7 @@ def validate(val_loader, model, criterion):
         'Recall {r:.3f}\t'
         'F1 score {F1:.3f}\t'
         'Specificity {s:.3f}'
-        .format(top1=acc[5], loss=losses, p=precision[5], r=recall[5], F1=F1[5]), s=1-fpr[5])   
+        .format(top1=acc[5], loss=losses, p=precision[5], r=recall[5], F1=F1[5], s=1-fpr[5]))  
 
     return precision, recall, fpr
 
