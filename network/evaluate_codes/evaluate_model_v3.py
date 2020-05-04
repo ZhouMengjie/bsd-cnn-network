@@ -114,7 +114,7 @@ def main():
 
 
     # load model
-    model_file = main_directory + resnet18_precision.pth.tar'
+    model_file = main_directory + 'resnet18_precision.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
