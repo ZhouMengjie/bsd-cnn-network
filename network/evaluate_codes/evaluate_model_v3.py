@@ -74,11 +74,11 @@ def main():
     # print(args)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     valdir = os.path.join(data_dir, 'unionsquare5k')
-    main_directory = 'model_gap/'
-    ROC_names = 'ROC_bd_uq.png'
-    PR_names = 'PR_bd_uq.png'
+    main_directory = 'model_junction/'
+    ROC_names = 'ROC_jc_uq.png'
+    PR_names = 'PR_jc_uq.png'
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
