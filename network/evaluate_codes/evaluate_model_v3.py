@@ -74,8 +74,11 @@ def main():
     # print(args)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
+    main_directory = 'model_gap/'
+    ROC_names = 'ROC_bd_hd.png'
+    PR_names = 'PR_bd_hd.png'
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -94,7 +97,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # load model
-    model_file = 'model_junction/resnet18_accuracy.pth.tar'
+    model_file = main_directory + 'resnet18_accuracy.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -111,7 +114,7 @@ def main():
 
 
     # load model
-    model_file = 'model_junction/resnet18_precision.pth.tar'
+    model_file = main_directory + resnet18_precision.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -127,7 +130,7 @@ def main():
     torch.cuda.empty_cache()
 
     # load model
-    model_file = 'model_junction/resnet18_recall.pth.tar'
+    model_file = main_directory +'resnet18_recall.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -143,7 +146,7 @@ def main():
     torch.cuda.empty_cache()
 
     # load model
-    model_file = 'model_junction/resnet18_F1.pth.tar'
+    model_file = main_directory + 'resnet18_F1.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -160,7 +163,7 @@ def main():
 
 
     # load model
-    model_file = 'model_junction/resnet18_loss.pth.tar'
+    model_file = main_directory + 'resnet18_loss.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -187,7 +190,7 @@ def main():
     plt.ylabel("True Positive Rate",fontsize=16)
     plt.title("ROC Curve",fontsize=16)
     plt.legend(loc="lower right",fontsize=16)
-    plt.savefig('ROC_junction_hd.png')
+    plt.savefig(ROC_names)
     # plt.show()
 
     # plot P-R curve
@@ -201,7 +204,7 @@ def main():
     plt.ylabel("Precision",fontsize=16)
     plt.title("Precision Recall Curve",fontsize=17)
     plt.legend(fontsize=16)
-    plt.savefig('PR_junction_hd.png')
+    plt.savefig(PR_names)
     # plt.show()
 
 
@@ -309,9 +312,9 @@ def validate(val_loader, model, criterion):
         #            i, len(val_loader), batch_time=batch_time, loss=losses,
         #            top1=top1))
 
-    print(' * Prec@1 {top1.avg:.3f}\t'
-            'Loss {loss.avg:.4f}'
-            .format(top1=top1, loss=losses))
+    # print(' * Prec@1 {top1.avg:.3f}\t'
+    #         'Loss {loss.avg:.4f}'
+    #         .format(top1=top1, loss=losses))
     
     cm.append(confusion_matrix_0) 
     cm.append(confusion_matrix_1) 
