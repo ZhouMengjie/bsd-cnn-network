@@ -237,12 +237,12 @@ def validate(val_loader, model, criterion):
         input = input.to(device)
         target = target.to(device)
 
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        # input_var = torch.autograd.Variable(input)
+        # target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        output = model(input)
+        loss = criterion(output, target)
 
         # convert output to softmax
         s = F.softmax(output, dim=1)
