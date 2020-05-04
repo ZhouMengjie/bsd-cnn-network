@@ -288,17 +288,17 @@ def validate(val_loader, model, criterion):
     model.eval()
     
     # define a confusion_matrix
-    confusion_matrix_0 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_1 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_2 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_3 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_4 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_5 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_6 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_7 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_8 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_9 = meter.ConfusionMeter(args.num_classes)
-    confusion_matrix_10 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_0 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_1 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_2 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_3 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_4 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_5 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_6 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_7 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_8 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_9 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_10 = meter.ConfusionMeter(args.num_classes+1)
 
     end = time.time()
     cm = []
