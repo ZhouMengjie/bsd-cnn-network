@@ -73,21 +73,8 @@ def main():
     args = parser.parse_args()
     # print(args)
 
-    # load model
-    model_file = 'model_gap/resnet18_best.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
-    # print(model) 
-
-    if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPU!")
-        model = nn.DataParallel(model)
-    model = model.to(device)
-
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -105,11 +92,9 @@ def main():
 
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss()
-    precision_bd, recall_bd, fpr_bd = validate(val_loader, model, criterion)
-
 
     # load model
-    model_file = 'model_junction/resnet18_best.pth.tar'
+    model_file = 'model_junction/resnet18_accuracy.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -121,39 +106,97 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    data_dir = 'data/JUNCTIONS' # or GAPS
-    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    precision_acc, recall_acc, fpr_acc = validate(val_loader, model, criterion)
 
-    val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])),
-        batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True)
 
-    precision_jc, recall_jc, fpr_jc = validate(val_loader, model, criterion)
+    # load model
+    model_file = 'model_junction/resnet18_precision.pth.tar'
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    precision_prec, recall_prec, fpr_prec = validate(val_loader, model, criterion)
+
+    # load model
+    model_file = 'model_junction/resnet18_recall.pth.tar'
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    precision_rec, recall_rec, fpr_rec = validate(val_loader, model, criterion)
+
+    # load model
+    model_file = 'model_junction/resnet18_F1.pth.tar'
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    precision_f1, recall_f1, fpr_f1 = validate(val_loader, model, criterion)
+
+
+    # load model
+    model_file = 'model_junction/resnet18_loss.pth.tar'
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    precision_loss, recall_loss, fpr_loss = validate(val_loader, model, criterion)
+
 
     # plot ROC curve
     plt.figure(figsize=(10,6))
-    plt.plot(fpr_bd,recall_bd,label="Resnet18 BD",linewidth=2)
-    plt.plot(fpr_jc,recall_jc,label="Resnet18 JC",linewidth=2)
+    plt.plot(fpr_acc,recall_acc,label="Resnet18_Accuracy",linewidth=2)
+    plt.plot(fpr_prec,recall_prec,label="Resnet18_Precision",linewidth=2)
+    plt.plot(fpr_rec,recall_rec,label="Resnet18_Recall",linewidth=2)  
+    plt.plot(fpr_f1,recall_f1,label="Resnet18_F1",linewidth=2)
+    plt.plot(fpr_loss,recall_loss,label="Resnet18_Loss",linewidth=2)
     plt.xlabel("False Positive Rate",fontsize=16)
     plt.ylabel("True Positive Rate",fontsize=16)
     plt.title("ROC Curve",fontsize=16)
     plt.legend(loc="lower right",fontsize=16)
-    plt.savefig('roc.png')
+    plt.savefig('ROC_junction_hd.png')
     # plt.show()
 
     # plot P-R curve
     plt.figure(figsize=(10,6))
-    plt.plot(recall_bd,precision_bd,label="Resnet18 BD",linewidth=2)
-    plt.plot(recall_jc,precision_jc,label="Resnet18 JC",linewidth=2)
+    plt.plot(recall_acc,precision_acc,label="Resnet18_Accuracy",linewidth=2)
+    plt.plot(recall_prec,precision_prec,label="Resnet18_Precision",linewidth=2)
+    plt.plot(recall_rec,precision_rec,label="Resnet18_Recall",linewidth=2)
+    plt.plot(recall_f1,precision_f1,label="Resnet18_F1",linewidth=2)  
+    plt.plot(recall_loss,precision_loss,label="Resnet18_Loss",linewidth=2) 
     plt.xlabel("Recall",fontsize=16)
     plt.ylabel("Precision",fontsize=16)
     plt.title("Precision Recall Curve",fontsize=17)
     plt.legend(fontsize=16)
-    plt.savefig('pr.png')
+    plt.savefig('PR_junction_hd.png')
     # plt.show()
 
 
