@@ -95,7 +95,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])   
 
-    sub_area = 'hudsonriver5k'            
+    sub_area = 'unionsquare5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -120,8 +120,8 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
 
     
-    scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
     # scipy.io.savemat('ws_gaps_features.mat', mdict={'features': features})
     # scipy.io.savemat('ws_gaps_ids_labels.mat', mdict={'panoids': panoids})
@@ -168,13 +168,13 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         batch_time.update(time.time() - end)
         end = time.time()
 
-        # if i % args.print_freq == 0:
-        #     print('Test: [{0}/{1}]\t'
-        #           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-        #           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-        #           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-        #            i, len(val_loader), batch_time=batch_time, loss=losses,
-        #            top1=top1))
+        if i % args.print_freq == 0:
+            print('Test: [{0}/{1}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                   i, len(val_loader), batch_time=batch_time, loss=losses,
+                   top1=top1))
 
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))
