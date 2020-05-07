@@ -138,16 +138,16 @@ def main():
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(traindir, transforms.Compose([
+        datasets.ImageFolder(traindir, transforms.Compose(
             transform
-        ])),
+        )),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
     # print(len(train_loader))
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
+        datasets.ImageFolder(valdir, transforms.Compose(
             transform
-        ])),
+        )),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
