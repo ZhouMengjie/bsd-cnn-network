@@ -121,8 +121,8 @@ def main():
         checkpoint = torch.load(model_file)
         args.start_epoch = checkpoint['epoch']
         # best_prec = checkpoint['best_prec']
-        best_loss = checkpoint['best_loss']
-        best_acc = checkpoint['best_acc']
+        # best_loss = checkpoint['best_loss']
+        # best_acc = checkpoint['best_acc']
         # best_rec = checkpoint['best_rec']
         # best_F1 = checkpoint['best_F1']
         model.load_state_dict(checkpoint['state_dict'])        
