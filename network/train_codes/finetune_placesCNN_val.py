@@ -38,7 +38,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18/bd_all_index')
+writer = SummaryWriter('runs/alexnet/jc_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -89,6 +89,8 @@ def main():
     global args, device, writer, best_prec, best_loss, best_acc, best_rec, best_F1
     args = parser.parse_args()
     print(args)
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
 
     # load the pre-trained weights
     model_file = '%s_places365.pth.tar' % args.arch
@@ -98,11 +100,17 @@ def main():
 
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
-    # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage.cuda(0)) # cpu to gpu
-    # checkpoint = torch.load(model_file)
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-    state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+
+    if args.arch is "alexnet":
+        state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+        state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
+    else:      
+        state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+        state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+        transform = [transforms.ToTensor(),normalize]
+
     model.load_state_dict(state_dict, strict=False)   
 
     print(model)
@@ -125,24 +133,20 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
+            transform
         ])),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
     # print(len(train_loader))
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
+            transform
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
@@ -167,22 +171,16 @@ def main():
 
         # remember best prec and best loss and save checkpoint
         is_acc = acc > best_acc
-        # print(acc)
-        # print(is_acc)
         best_acc = max(acc, best_acc)
         
         is_loss = loss < best_loss
         best_loss = min(loss, best_loss)
-        # print(loss)
-        # print(is_loss)
 
         is_prec = prec > best_prec
         best_prec = max(prec, best_prec)
-        # print(is_prec)
 
         is_rec = rec > best_rec
         best_rec = max(rec, best_rec)
-        # print(is_rec)
 
         is_F1 = F1 > best_F1
         best_F1 = max(F1, best_F1)
@@ -210,7 +208,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
     is_rec = False
     is_F1 = False
     is_loss = False
-
 
     # switch to train mode
     model.train()
