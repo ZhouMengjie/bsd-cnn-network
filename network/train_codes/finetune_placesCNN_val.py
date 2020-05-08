@@ -62,7 +62,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_false',
+parser.add_argument('--resume', dest='resume', action='store_true',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/alexnet/jc_all_index')
+writer = SummaryWriter('runs/alexnet/bd_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -133,7 +133,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
