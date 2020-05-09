@@ -38,7 +38,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -50,7 +50,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -60,7 +60,7 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_false',
+parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
 parser.add_argument('--resume', dest='resume', action='store_true',
                     help='use checkpoint model')
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/alexnet/bd_all_index')
+writer = SummaryWriter('runs/resnet50/jc_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -92,32 +92,43 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    # load the pre-trained weights
-    model_file = '%s_places365.pth.tar' % args.arch
-    if not os.access(model_file, os.W_OK):
-        weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
-        os.system('wget ' + weight_url)
+    if not args.pretrained:
+        model = models.__dict__[args.arch](num_classes=args.num_classes)
+        # load the pre-trained weights
+        model_file = '%s_places365.pth.tar' % args.arch
+        if not os.access(model_file, os.W_OK):
+            weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
+            os.system('wget ' + weight_url)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
 
+        if args.arch is "alexnet":
+            state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+            state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+            transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
+        if args.arch is "resnet18" or "resnet50":      
+            state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+            state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+            transform = [transforms.ToTensor(),normalize]
+        if args.arch is "densenet161":
+            state_dict = {str.replace(k,'classifier.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+            state_dict = {str.replace(k,'classifier.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+            transform = [transforms.ToTensor(),normalize]
+       
+        model.load_state_dict(state_dict, strict=False)  
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    # print(model)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    else:
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+            transform = [transforms.ToTensor(),normalize]
+        if args.arch is "vgg":
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+            transform = [transforms.ToTensor(),normalize]
 
-    if args.arch is "alexnet":
-        state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-        state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
-    if args.arch is "resnet18" or "resnet50":      
-        state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-        state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-        transform = [transforms.ToTensor(),normalize]
-    if args.arch is "densenet161":
-        state_dict = {str.replace(k,'classifier.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
-        state_dict = {str.replace(k,'classifier.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
-        transform = [transforms.ToTensor(),normalize]
-
-    model.load_state_dict(state_dict, strict=False)   
     print(model)
 
     # if args.resume:
@@ -138,7 +149,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
