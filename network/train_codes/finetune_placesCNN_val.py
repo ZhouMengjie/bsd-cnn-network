@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/alextnet/jc_all_index')
+writer = SummaryWriter('runs/alexnet/bd_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -98,7 +98,9 @@ def main():
         weight_url = 'http://places2.csail.mit.edu/models_places365/' + model_file
         os.system('wget ' + weight_url)
 
+
     model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # print(model)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
 
@@ -106,13 +108,16 @@ def main():
         state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
         state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
         transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
-    else:      
+    if args.arch is "resnet18" or "resnet50":      
         state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
         state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
         transform = [transforms.ToTensor(),normalize]
+    if args.arch is "densenet161":
+        state_dict = {str.replace(k,'classifier.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+        state_dict = {str.replace(k,'classifier.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
+        transform = [transforms.ToTensor(),normalize]
 
     model.load_state_dict(state_dict, strict=False)   
-
     print(model)
 
     # if args.resume:
@@ -133,7 +138,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
@@ -143,7 +148,7 @@ def main():
         )),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
-    # print(len(train_loader))
+
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
             transform
