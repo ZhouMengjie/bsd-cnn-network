@@ -44,7 +44,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=120, type=int, metavar='N',
+parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -115,17 +115,17 @@ def main():
 
     print(model)
 
-    if args.resume:
-        model_file = 'net5_latest.pth.tar'
-        # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-        checkpoint = torch.load(model_file)
-        args.start_epoch = checkpoint['epoch']
-        # best_prec = checkpoint['best_prec']
-        # best_loss = checkpoint['best_loss']
-        # best_acc = checkpoint['best_acc']
-        # best_rec = checkpoint['best_rec']
-        # best_F1 = checkpoint['best_F1']
-        model.load_state_dict(checkpoint['state_dict'])        
+    # if args.resume:
+    #     model_file = 'net5_latest.pth.tar'
+    #     # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+    #     checkpoint = torch.load(model_file)
+    #     args.start_epoch = checkpoint['epoch']
+    #     # best_prec = checkpoint['best_prec']
+    #     # best_loss = checkpoint['best_loss']
+    #     # best_acc = checkpoint['best_acc']
+    #     # best_rec = checkpoint['best_rec']
+    #     # best_F1 = checkpoint['best_F1']
+    #     model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
