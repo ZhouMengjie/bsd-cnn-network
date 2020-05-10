@@ -44,7 +44,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
+parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet50/jc_all_index')
+writer = SummaryWriter('runs/resnet50/bd_all_index')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -149,7 +149,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
+    data_dir = 'data/GAPS' # or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
