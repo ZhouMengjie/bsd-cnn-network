@@ -1,7 +1,4 @@
-# this code is modified from the pytorch example code: https://github.com/pytorch/examples/blob/master/imagenet/main.py
-# after the model is trained, you might use convert_model.py to remove the data parallel module to make the model as standalone weight.
-#
-# Bolei Zhou
+# evaluate different models with cross-entropy loss
 
 import argparse
 import os
@@ -27,7 +24,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -75,19 +72,21 @@ def main():
 
     # Data loading code
     data_dir = 'data/JUNCTIONS' # or GAPS
-    valdir = os.path.join(data_dir, 'unionsquare5k')
-    main_directory = 'model_junction/'
-    ROC_names = 'ROC_jc_uq.png'
-    PR_names = 'PR_jc_uq.png'
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    main_directory = 'model_junction_alexnet/'
+    # ROC_names = 'ROC_jc_uq.png'
+    # PR_names = 'PR_jc_uq.png'
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+    if args.arch is "alexnet":  
+        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]               
+
     val_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(valdir, transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])),
+        datasets.ImageFolder(valdir, transforms.Compose(
+            transform
+        )),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
@@ -97,7 +96,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # load model
-    model_file = main_directory + 'resnet18_accuracy.pth.tar'
+    model_file = main_directory + args.arch + '_accuracy.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -114,7 +113,7 @@ def main():
 
 
     # load model
-    model_file = main_directory + 'resnet18_precision.pth.tar'
+    model_file = main_directory + args.arch + '_precision.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -130,7 +129,7 @@ def main():
     torch.cuda.empty_cache()
 
     # load model
-    model_file = main_directory +'resnet18_recall.pth.tar'
+    model_file = main_directory + args.arch + '_recall.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -146,7 +145,7 @@ def main():
     torch.cuda.empty_cache()
 
     # load model
-    model_file = main_directory + 'resnet18_F1.pth.tar'
+    model_file = main_directory + args.arch + '_F1.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -163,7 +162,7 @@ def main():
 
 
     # load model
-    model_file = main_directory + 'resnet18_loss.pth.tar'
+    model_file = main_directory + args.arch + '_loss.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -179,33 +178,33 @@ def main():
     torch.cuda.empty_cache()
 
 
-    # plot ROC curve
-    plt.figure(figsize=(10,6))
-    plt.plot(fpr_acc,recall_acc,label="Resnet18_Accuracy",linewidth=2)
-    plt.plot(fpr_prec,recall_prec,label="Resnet18_Precision",linewidth=2)
-    plt.plot(fpr_rec,recall_rec,label="Resnet18_Recall",linewidth=2)  
-    plt.plot(fpr_f1,recall_f1,label="Resnet18_F1",linewidth=2)
-    plt.plot(fpr_loss,recall_loss,label="Resnet18_Loss",linewidth=2)
-    plt.xlabel("False Positive Rate",fontsize=16)
-    plt.ylabel("True Positive Rate",fontsize=16)
-    plt.title("ROC Curve",fontsize=16)
-    plt.legend(loc="lower right",fontsize=16)
-    plt.savefig(ROC_names)
-    # plt.show()
+    # # plot ROC curve
+    # plt.figure(figsize=(10,6))
+    # plt.plot(fpr_acc,recall_acc,label="Resnet18_Accuracy",linewidth=2)
+    # plt.plot(fpr_prec,recall_prec,label="Resnet18_Precision",linewidth=2)
+    # plt.plot(fpr_rec,recall_rec,label="Resnet18_Recall",linewidth=2)  
+    # plt.plot(fpr_f1,recall_f1,label="Resnet18_F1",linewidth=2)
+    # plt.plot(fpr_loss,recall_loss,label="Resnet18_Loss",linewidth=2)
+    # plt.xlabel("False Positive Rate",fontsize=16)
+    # plt.ylabel("True Positive Rate",fontsize=16)
+    # plt.title("ROC Curve",fontsize=16)
+    # plt.legend(loc="lower right",fontsize=16)
+    # plt.savefig(ROC_names)
+    # # plt.show()
 
-    # plot P-R curve
-    plt.figure(figsize=(10,6))
-    plt.plot(recall_acc,precision_acc,label="Resnet18_Accuracy",linewidth=2)
-    plt.plot(recall_prec,precision_prec,label="Resnet18_Precision",linewidth=2)
-    plt.plot(recall_rec,precision_rec,label="Resnet18_Recall",linewidth=2)
-    plt.plot(recall_f1,precision_f1,label="Resnet18_F1",linewidth=2)  
-    plt.plot(recall_loss,precision_loss,label="Resnet18_Loss",linewidth=2) 
-    plt.xlabel("Recall",fontsize=16)
-    plt.ylabel("Precision",fontsize=16)
-    plt.title("Precision Recall Curve",fontsize=17)
-    plt.legend(fontsize=16)
-    plt.savefig(PR_names)
-    # plt.show()
+    # # plot P-R curve
+    # plt.figure(figsize=(10,6))
+    # plt.plot(recall_acc,precision_acc,label="Resnet18_Accuracy",linewidth=2)
+    # plt.plot(recall_prec,precision_prec,label="Resnet18_Precision",linewidth=2)
+    # plt.plot(recall_rec,precision_rec,label="Resnet18_Recall",linewidth=2)
+    # plt.plot(recall_f1,precision_f1,label="Resnet18_F1",linewidth=2)  
+    # plt.plot(recall_loss,precision_loss,label="Resnet18_Loss",linewidth=2) 
+    # plt.xlabel("Recall",fontsize=16)
+    # plt.ylabel("Precision",fontsize=16)
+    # plt.title("Precision Recall Curve",fontsize=17)
+    # plt.legend(fontsize=16)
+    # plt.savefig(PR_names)
+    # # plt.show()
 
 
 

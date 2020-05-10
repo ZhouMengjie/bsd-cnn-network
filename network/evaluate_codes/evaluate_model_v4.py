@@ -1,7 +1,4 @@
-# this code is modified from the pytorch example code: https://github.com/pytorch/examples/blob/master/imagenet/main.py
-# after the model is trained, you might use convert_model.py to remove the data parallel module to make the model as standalone weight.
-#
-# Bolei Zhou
+# evalutate different models with ghmc loss
 
 import argparse
 import os
