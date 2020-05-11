@@ -74,10 +74,10 @@ def main():
     # print(args)
 
     # load model
-    # classes = ('junctions', 'non_junctions')
-    classes = ('gaps', 'non_gaps')
-    # model_file = 'model_junction/resnet18_recall.pth.tar'
-    model_file = 'model_gap/resnet18_recall.pth.tar'
+    classes = ('junctions', 'non_junctions')
+    # classes = ('gaps', 'non_gaps')
+    model_file = 'model_junction_alexnet/alexnet_recall.pth.tar'
+    # model_file = 'model_gap/resnet18_recall.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
@@ -91,7 +91,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS,JUNCTIONS
+    data_dir = 'data/JUNCTIONS' # or GAPS,JUNCTIONS
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])   
 
@@ -120,11 +120,11 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
 
     
-    # scipy.io.savemat('ws_junctions_features.mat', mdict={'features': features})
-    # scipy.io.savemat('ws_junctions_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
-    scipy.io.savemat('hd_gaps_features.mat', mdict={'features': features})
-    scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
+    # scipy.io.savemat('hd_gaps_features.mat', mdict={'features': features})
+    # scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 

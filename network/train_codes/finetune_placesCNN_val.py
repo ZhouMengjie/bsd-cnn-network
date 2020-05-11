@@ -273,17 +273,28 @@ def train(train_loader, model, criterion, optimizer, epoch):
         #                 plot_classes_preds(output, input, target, classes),
         #                 global_step=epoch * len(train_loader) + i)
         
+        # if t_step % args.check_interval == 0:
+        #     args.num_save += 1
+        #     save_checkpoint({
+        #         'epoch': epoch,
+        #         'arch': args.arch,
+        #         'state_dict': model.state_dict(),
+        #         'best_acc': losses.avg,
+        #         'best_loss': top1.avg
+        #     }, is_acc, is_prec, is_rec, is_F1, is_loss,'net'+ str(args.num_save))
+        #     if args.num_save == 5:
+        #         args.num_save = 0
         if t_step % args.check_interval == 0:
-            args.num_save += 1
             save_checkpoint({
-                'epoch': epoch,
+                'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
-                'best_acc': losses.avg,
-                'best_loss': top1.avg
-            }, is_acc, is_prec, is_rec, is_F1, is_loss,'net'+ str(args.num_save))
-            if args.num_save == 5:
-                args.num_save = 0
+                'best_acc': best_acc,
+                'best_prec': best_prec,
+                'best_rec': best_rec,
+                'best_F1': best_F1,
+                'best_loss': best_loss
+            }, is_acc, is_prec, is_rec, is_F1, is_loss,'checkpoint')
 
 def validate(val_loader, model, criterion, epoch):
     losses = AverageMeter()
