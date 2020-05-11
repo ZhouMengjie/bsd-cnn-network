@@ -77,7 +77,7 @@ def main():
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
     # model_file = 'model_junction_alexnet/alexnet_recall.pth.tar'
-    model_file = 'model_gap/alexnet_accuracy.pth.tar'
+    model_file = 'model_gap_alexnet/alexnet_accuracy.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
