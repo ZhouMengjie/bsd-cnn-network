@@ -95,7 +95,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])   
 
-    sub_area = 'hudsonriver5k'            
+    sub_area = 'wallstreet5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -120,8 +120,8 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
 
     
-    scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('ws_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('ws_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
     # scipy.io.savemat('hd_gaps_features.mat', mdict={'features': features})
     # scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
