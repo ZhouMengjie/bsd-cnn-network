@@ -95,7 +95,9 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225]) 
     if args.arch is "alexnet":  
-        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]                                   
+        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]  
+    else:
+        transform = [transforms.ToTensor(),normalize]                              
 
     sub_area = 'hudsonriver5k'            
     valdir = os.path.join(data_dir, sub_area)
