@@ -81,7 +81,9 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
     if args.arch is "alexnet":  
-        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]               
+        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
+    else:
+        transform = [transforms.ToTensor(),normalize]                
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
