@@ -24,7 +24,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -71,9 +71,9 @@ def main():
     # print(args)
 
     # Data loading code
-    data_dir = 'data/GAPS' # or GAPS
+    data_dir = 'data/JUNCTIONS' # or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
-    main_directory = 'model_gap_alexnet/'
+    main_directory = 'model_junction_resnet50/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
 
