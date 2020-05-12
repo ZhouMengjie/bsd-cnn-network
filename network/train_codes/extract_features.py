@@ -27,7 +27,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -77,7 +77,7 @@ def main():
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
     # model_file = 'model_junction_alexnet/alexnet_recall.pth.tar'
-    model_file = 'model_gap_alexnet/alexnet_accuracy.pth.tar'
+    model_file = 'model_gap_resnet50/resnet50_recall.pth.tar'
     
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
