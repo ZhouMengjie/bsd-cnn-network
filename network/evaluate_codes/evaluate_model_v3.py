@@ -72,7 +72,7 @@ def main():
 
     # Data loading code
     data_dir = 'data/GAPS' # or GAPS
-    valdir = os.path.join(data_dir, 'wallstreet5k')
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
     main_directory = 'model_gap_googlenet/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
