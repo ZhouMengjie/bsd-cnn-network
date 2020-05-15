@@ -108,7 +108,7 @@ def main():
     else:
         transform = [transforms.ToTensor(),normalize]                              
 
-    sub_area = 'unionsquare5k'            
+    sub_area = 'wallstreet5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
@@ -135,8 +135,8 @@ def main():
     # scipy.io.savemat('uq_junctions_features.mat', mdict={'features': features})
     # scipy.io.savemat('uq_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
-    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
-    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('ws_gaps_features.mat', mdict={'features': features})
+    scipy.io.savemat('ws_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 
