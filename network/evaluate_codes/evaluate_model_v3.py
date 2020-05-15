@@ -99,10 +99,21 @@ def main():
 
     # load model
     model_file = main_directory + args.arch + '_accuracy.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
+
+    if not args.pretrained:
+        model = models.__dict__[args.arch](num_classes=args.num_classes)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    else:
+        model = models.googlenet(pretrained=args.pretrained)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+
+    
     # print(model) 
 
     if torch.cuda.device_count() > 1:
