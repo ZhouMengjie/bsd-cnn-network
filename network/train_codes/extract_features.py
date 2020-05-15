@@ -27,7 +27,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='googlenet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -76,13 +76,22 @@ def main():
     # load model
     classes = ('junctions', 'non_junctions')
     # classes = ('gaps', 'non_gaps')
-    model_file = 'model_junction_resnet50/resnet50_recall.pth.tar'
-    # model_file = 'model_gap_resnet50/resnet50_recall.pth.tar'
+    model_file = 'model_junction_googlenet/googlenet_recall.pth.tar'
+    # model_file = 'model_gap_googlenet/googlenet_recall.pth.tar'
     
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
+    if not args.pretrained:
+        model = models.__dict__[args.arch](num_classes=args.num_classes)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    else:
+        model = models.googlenet(pretrained=args.pretrained)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+
     # print(model) 
 
     if torch.cuda.device_count() > 1:
