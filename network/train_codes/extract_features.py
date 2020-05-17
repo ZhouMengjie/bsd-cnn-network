@@ -114,7 +114,7 @@ def main():
     else:
         transform = [transforms.ToTensor(),normalize]                              
 
-    sub_area = 'wallstreet5k'            
+    sub_area = 'unionsquare5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
