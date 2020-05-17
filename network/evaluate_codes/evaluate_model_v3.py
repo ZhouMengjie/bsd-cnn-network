@@ -72,7 +72,7 @@ def main():
 
     # Data loading code
     data_dir = 'data/GAPS' # or GAPS
-    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    valdir = os.path.join(data_dir, 'wallstreet5k')
     main_directory = 'model_gap_vgg/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
@@ -242,7 +242,7 @@ def main():
             model = models.vgg11_bn(pretrained=args.pretrained)
             num_ftrs = model.classifier[6].in_features
             model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
-            
+
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
