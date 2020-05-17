@@ -85,9 +85,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+            
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)

@@ -24,7 +24,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='googlenet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -73,7 +73,7 @@ def main():
     # Data loading code
     data_dir = 'data/GAPS' # or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
-    main_directory = 'model_gap_googlenet/'
+    main_directory = 'model_gap_vgg/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
 
@@ -106,9 +106,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
@@ -134,9 +140,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
@@ -159,9 +171,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
@@ -184,9 +202,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
@@ -210,9 +234,15 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        model = models.googlenet(pretrained=args.pretrained)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs,args.num_classes)
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+            
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
