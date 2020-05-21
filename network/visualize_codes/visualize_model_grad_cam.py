@@ -114,7 +114,7 @@ def main():
     # print(args)
 
     # load model
-    model_file = 'model_gap/resnet18_recall.pth.tar'
+    model_file = 'model_junction/resnet18_recall.pth.tar'
     model = models.__dict__[args.arch](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -127,7 +127,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/nbd' # or GAPS
+    data_dir = 'data/njc' # or GAPS
     subarea = 'val'
     image_datasets = torchvision.datasets.ImageFolder(os.path.join(data_dir, subarea))
     image_paths = image_datasets.imgs
@@ -138,9 +138,9 @@ def main():
     images = torch.stack(images).to(device)
           
     # load classes
-    # classes= ["junctions", "non_junctions"]
-    classes= ["gaps", "non_gaps"]
-    output_dir = 'Grad_CAM/nbd'
+    classes= ["junctions", "non_junctions"]
+    # classes= ["gaps", "non_gaps"]
+    output_dir = 'Grad_CAM_resnet18/njc'
     make_dirs(output_dir)
 
     # switch to evaluate mode
