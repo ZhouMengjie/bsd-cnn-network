@@ -1,4 +1,4 @@
- # evaluate different models with cross-entropy loss
+ # evaluate the size of trained model 
 
 import argparse
 import os
