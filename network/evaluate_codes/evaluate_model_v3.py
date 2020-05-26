@@ -24,7 +24,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='densenet161',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -34,7 +34,7 @@ parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=16, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
@@ -73,7 +73,7 @@ def main():
     # Data loading code
     data_dir = 'data/GAPS' # JUNCTIONS or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
-    main_directory = 'model_gap_densenet161/'
+    main_directory = 'model_gap_alexnet/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
 
