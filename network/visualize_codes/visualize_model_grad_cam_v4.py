@@ -72,22 +72,35 @@ def make_dirs(path):
     if os.path.exists(path) is False:
         os.makedirs(path)
 
-def preprocess(image_path, transform):
+def preprocess(image_path, arch):
     image_path = image_path[0]
     raw_image = cv2.imread(image_path)
     raw_image = cv2.resize(raw_image, (224,) * 2)
-    image = transforms.Compose(
-        transform
-    )(raw_image[..., ::-1].copy())
+    if arch is "alexnet":
+        image = transforms.Compose(
+        [
+            transforms.Resize(227),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+        )(raw_image[..., ::-1].copy())
+    else:
+        image = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+        )(raw_image[..., ::-1].copy())
+
     return image, raw_image
 
-def load_images(image_paths, transform):
+def load_images(image_paths, arch):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path, transforms)
+        image, raw_image = preprocess(image_path, arch)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -106,19 +119,10 @@ def main():
     global args
     args = parser.parse_args()
     # print(args)
-
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-
-    if args.arch is "alexnet":  
-        transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
-    else:
-        transform = [transforms.ToTensor(),normalize] 
-
     
     # load model
     main_directory = 'model_gap_vgg/'
-    output_dir = 'Grad_CAM_vgg/nbd'
+    output_dir = 'Grad_CAM/vgg/nbd'
     data_dir = 'data/nbd' # or GAPS
     subarea = 'val'
     model_file = main_directory + args.arch + '_recall.pth.tar'
@@ -155,7 +159,7 @@ def main():
     # targets = image_datasets.targets
 
     # Images
-    images, raw_images = load_images(image_paths, transform)
+    images, raw_images = load_images(image_paths, args.arch)
     images = torch.stack(images).to(device)
           
     # load classes
@@ -166,7 +170,8 @@ def main():
     model.eval()
 
     # the four resisual layers
-    target_layers = ["layer1", "layer2", "layer3", "layer4"]
+    # target_layers = ["layer1", "layer2", "layer3", "layer4"]
+    target_layers = ['features'] # vgg
     target_class = 1 # 0-jc/njc, 1-njc/nbd
 
     gcam = GradCAM(model = model)

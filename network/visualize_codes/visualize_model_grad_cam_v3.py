@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -72,25 +72,35 @@ def make_dirs(path):
     if os.path.exists(path) is False:
         os.makedirs(path)
 
-def preprocess(image_path):
+def preprocess(image_path, arch):
     image_path = image_path[0]
     raw_image = cv2.imread(image_path)
     raw_image = cv2.resize(raw_image, (224,) * 2)
-    image = transforms.Compose(
+    if arch is "alexnet":
+        image = transforms.Compose(
+        [
+            transforms.Resize(227),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+        )(raw_image[..., ::-1].copy())
+    else:
+        image = transforms.Compose(
         [
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
-    )(raw_image[..., ::-1].copy())
+        )(raw_image[..., ::-1].copy())
+
     return image, raw_image
 
-def load_images(image_paths):
+def load_images(image_paths, arch):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path)
+        image, raw_image = preprocess(image_path, arch)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -109,14 +119,34 @@ def main():
     global args
     args = parser.parse_args()
     # print(args)
-
+    
     # load model
-    model_file = 'model_gap/resnet18_recall.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
-    print(model) 
+    main_directory = 'model_gap_vgg/'
+    output_dir = 'Grad_CAM/vgg/bd'
+    data_dir = 'data/bd' # or GAPS
+    subarea = 'val'
+    model_file = main_directory + args.arch + '_recall.pth.tar'
+
+    if not args.pretrained:
+        model = models.__dict__[args.arch](num_classes=args.num_classes)
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    else:
+        if args.arch is "googlenet":  
+            model = models.googlenet(pretrained=args.pretrained)
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs,args.num_classes)
+        else:
+            model = models.vgg11_bn(pretrained=args.pretrained)
+            num_ftrs = model.classifier[6].in_features
+            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
+        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    
+    print(model)
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
@@ -124,27 +154,24 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/bd' # or GAPS
-    subarea = 'val'
     image_datasets = torchvision.datasets.ImageFolder(os.path.join(data_dir, subarea))
     image_paths = image_datasets.imgs
     # targets = image_datasets.targets
 
     # Images
-    images, raw_images = load_images(image_paths)
+    images, raw_images = load_images(image_paths, args.arch)
     images = torch.stack(images).to(device)
           
     # load classes
-    # classes= ["junctions", "non_junctions"]
     classes= ["gaps", "non_gaps"]
-    output_dir = 'Grad_CAM_resnet18/bd'
     make_dirs(output_dir)
 
     # switch to evaluate mode
     model.eval()
 
     # the four resisual layers
-    target_layers = ["layer1", "layer2", "layer3", "layer4"]
+    # target_layers = ["layer1", "layer2", "layer3", "layer4"]
+    target_layers = ['features'] # vgg
     target_class = 0 # 0-jc/njc, 1-njc/nbd
 
     gcam = GradCAM(model = model)
