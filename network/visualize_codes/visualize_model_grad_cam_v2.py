@@ -75,7 +75,7 @@ def make_dirs(path):
 def preprocess(image_path, arch):
     image_path = image_path[0]
     raw_image = cv2.imread(image_path)
-    raw_image = cv2.resize(raw_image, (224,) * 2)
+    raw_image = cv2.resize(raw_image, (227,) * 2)
     if arch is "alexnet":
         image = transforms.Compose(
         [           
