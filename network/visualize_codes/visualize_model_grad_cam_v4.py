@@ -79,8 +79,8 @@ def preprocess(image_path, arch):
     if arch is "alexnet":
         image = transforms.Compose(
         [
-            # transforms.Resize(227),
             transforms.ToTensor(),
+            transforms.Resize(227),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
         )(raw_image[..., ::-1].copy())
