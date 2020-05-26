@@ -72,35 +72,26 @@ def make_dirs(path):
     if os.path.exists(path) is False:
         os.makedirs(path)
 
-def preprocess(image_path, arch):
+def preprocess(image_path):
     image_path = image_path[0]
     raw_image = cv2.imread(image_path)
     raw_image = cv2.resize(raw_image, (227,) * 2)
-    if arch is "alexnet":
-        image = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Resize(227),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-        )(raw_image[..., ::-1].copy())
-    else:
-        image = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-        )(raw_image[..., ::-1].copy())
+    image = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+    )(raw_image[..., ::-1].copy())
 
     return image, raw_image
 
-def load_images(image_paths, arch):
+def load_images(image_paths):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path, arch)
+        image, raw_image = preprocess(image_path)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -167,7 +158,7 @@ def main():
     # targets = image_datasets.targets
 
     # Images
-    images, raw_images = load_images(image_paths, args.arch)
+    images, raw_images = load_images(image_paths)
     images = torch.stack(images).to(device)
           
     # load classes
