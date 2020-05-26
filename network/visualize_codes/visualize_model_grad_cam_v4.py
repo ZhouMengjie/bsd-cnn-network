@@ -130,7 +130,7 @@ def main():
     # target_layers = ["layer4"] # resnet18 or 50
     # target_layers = ['features'] # vgg or alexnet
     # target_layers = ['inception5b'] # googlenet
-    target_layers = ['denselayer24'] # densenet161
+    target_layers = ['denseblock4'] # densenet161
 
     target_class = 1 # 0-jc/njc, 1-njc/nbd
     model_file = main_directory + args.arch + '_recall.pth.tar'
