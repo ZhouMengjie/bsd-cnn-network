@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='densenet161',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -121,8 +121,8 @@ def main():
     # print(args)
     
     # load model
-    main_directory = 'model_junction_densenet161/'
-    output_dir = 'Grad_CAM/densenet161/jc'
+    main_directory = 'model_junction_alexnet/'
+    output_dir = 'Grad_CAM/alexnet/jc'
     data_dir = 'data/jc' # or GAPS
     subarea = 'val'
     

@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='densenet161',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -121,8 +121,8 @@ def main():
     # print(args)
     
     # load model
-    main_directory = 'model_gap_densenet161/'
-    output_dir = 'Grad_CAM/densenet161/bd'
+    main_directory = 'model_gap_alexnet/'
+    output_dir = 'Grad_CAM/alexnet/bd'
     data_dir = 'data/bd' # or GAPS
     subarea = 'val'
 
@@ -133,7 +133,7 @@ def main():
     # target_layers = ['denseblock4'] # densenet161
 
     target_class = 0 # 0-jc/njc, 1-njc/nbd
-    model_file = main_directory + args.arch + '_recall.pth.tar'
+    model_file = main_directory + args.arch + '_accuracy.pth.tar'
 
     if not args.pretrained:
         model = models.__dict__[args.arch](num_classes=args.num_classes)
