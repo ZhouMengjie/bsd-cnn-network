@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='densenet161',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -121,10 +121,19 @@ def main():
     # print(args)
     
     # load model
-    main_directory = 'model_junction_resnet50/'
-    output_dir = 'Grad_CAM/resnet50/njc'
+    main_directory = 'model_junction_densenet161/'
+    output_dir = 'Grad_CAM/densenet161/njc'
     data_dir = 'data/njc' # or GAPS
     subarea = 'val'
+
+    # the four resisual layers
+    # target_layers = ["layer4"] # resnet18 or 50
+    # target_layers = ['features'] # vgg or alexnet
+    # target_layers = ['inception5b'] # googlenet
+    target_layers = ['denselayer24'] # densenet161
+
+
+    target_class = 1 # 0-jc/njc, 1-njc/nbd
     model_file = main_directory + args.arch + '_recall.pth.tar'
 
     if not args.pretrained:
@@ -168,12 +177,6 @@ def main():
 
     # switch to evaluate mode
     model.eval()
-
-    # the four resisual layers
-    target_layers = ["layer4"] # resnet18 or 50
-    # target_layers = ['features'] # vgg
-    # target_layers = ['inception5b'] # googlenet
-    target_class = 1 # 0-jc/njc, 1-njc/nbd
 
     gcam = GradCAM(model = model)
     probs, ids = gcam.forward(images)
