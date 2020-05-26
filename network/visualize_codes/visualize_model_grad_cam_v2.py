@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='googlenet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -52,7 +52,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_false',
                     help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
+parser.add_argument('--pretrained', dest='pretrained', action='store_false',
                     help='use pre-trained model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -75,7 +75,7 @@ def make_dirs(path):
 def preprocess(image_path):
     image_path = image_path[0]
     raw_image = cv2.imread(image_path)
-    raw_image = cv2.resize(raw_image, (227,) * 2)
+    raw_image = cv2.resize(raw_image, (224,) * 2)
     image = transforms.Compose(
     [           
         transforms.ToTensor(),
@@ -112,15 +112,15 @@ def main():
     # print(args)
     
     # load model
-    main_directory = 'model_junction_alexnet/'
-    output_dir = 'Grad_CAM/alexnet/njc'
+    main_directory = 'model_junction_googlenet/'
+    output_dir = 'Grad_CAM/googlenet/njc'
     data_dir = 'data/njc' # or GAPS
     subarea = 'val'
 
     # the four resisual layers
     # target_layers = ["layer4"] # resnet18 or 50
-    target_layers = ['features'] # vgg or alexnet or densenet161
-    # target_layers = ['inception5b'] # googlenet
+    # target_layers = ['features'] # vgg or alexnet or densenet161
+    target_layers = ['inception5b'] # googlenet
     # target_layers = ['denseblock4'] # densenet161
 
 
