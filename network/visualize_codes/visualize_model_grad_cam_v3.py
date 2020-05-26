@@ -28,7 +28,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='vgg',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='googlenet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -170,8 +170,9 @@ def main():
     model.eval()
 
     # the four resisual layers
-    # target_layers = ["layer1", "layer2", "layer3", "layer4"]
-    target_layers = ['features'] # vgg
+    # target_layers = ["layer1", "layer2", "layer3", "layer4"] # resnet18
+    # target_layers = ['features'] # vgg
+    target_layers = ['inception5b'] # googlenet
     target_class = 0 # 0-jc/njc, 1-njc/nbd
 
     gcam = GradCAM(model = model)
