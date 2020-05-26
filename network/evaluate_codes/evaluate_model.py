@@ -24,10 +24,6 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='densenet161',
-                    help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -94,7 +90,7 @@ def main():
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = models.__dict__['alexnet'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)    
@@ -160,7 +156,7 @@ def main():
     # load resnet18 model
     model_file = 'model_gap/' + 'resnet18_recall.pth.tar'
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = models.__dict__['resnet18'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -178,7 +174,7 @@ def main():
     # load resnet50 model
     model_file = 'model_gap_resnet50/' + 'resnet50_recall.pth.tar'
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = models.__dict__['resnet50'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -195,7 +191,7 @@ def main():
     # load densenet161 model
     model_file = 'model_gap_densenet161/' + 'densenet161_recall.pth.tar'
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = models.__dict__['densenet161'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
