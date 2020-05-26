@@ -171,7 +171,7 @@ def main():
 
     # the four resisual layers
     # target_layers = ["layer1", "layer2", "layer3", "layer4"]
-    target_layers = ['features[28]'] # vgg
+    target_layers = ['features(28)'] # vgg
     target_class = 0 # 0-jc/njc, 1-njc/nbd
 
     gcam = GradCAM(model = model)
