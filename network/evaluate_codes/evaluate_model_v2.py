@@ -44,8 +44,6 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_false',
                     help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-                    help='use pre-trained model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
                     help='interval of each checkpoint')
@@ -116,7 +114,7 @@ def main():
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)   
 
-    model = models.vgg11_bn(pretrained=args.pretrained)
+    model = models.vgg11_bn(pretrained=True)
     num_ftrs = model.classifier[6].in_features
     model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
 
@@ -136,7 +134,7 @@ def main():
     # load googlenet model
     model_file = 'model_junction_googlenet/' + 'googlenet_recall.pth.tar'
 
-    model = models.googlenet(pretrained=args.pretrained)
+    model = models.googlenet(pretrained=True)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs,args.num_classes)
 
