@@ -195,7 +195,7 @@ def validate(val_loader, model, criterion, epoch):
         Yr = Yr.view(-1,3,224,224)                
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
-        target = Label.to(device).view(-1)  
+        target = Label.to(device,dtype=torch.int64).view(-1)  
 
         # compute output
         output = model.forward(Yf, Yl, Yb, Yr)
