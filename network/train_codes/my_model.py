@@ -37,7 +37,7 @@ class MyModel(nn.Module):
 
         self.fc = nn.Linear(512 * 4, 16)
         self.fc.apply(weights_init)
-        self.gsv_model.fc.apply(weights_init)
+        # self.gsv_model.fc.apply(weights_init)
        
     def forward(self, Yf, Yl, Yr, Yb):
         # Fordward pass for gsvs
