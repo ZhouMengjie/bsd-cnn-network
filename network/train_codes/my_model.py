@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import os 
 from torchvision import models
 import sys
+from Resnet import resnet18,resnet50
 
 class MyModel(nn.Module):
     def __init__(self, cfg): 
@@ -21,7 +22,8 @@ class MyModel(nn.Module):
         self.cfg = cfg
 
         # Load gsv_model
-        self.gsv_model = models.__dict__['resnet18'](num_classes=16)
+        # self.gsv_model = models.__dict__['resnet18'](num_classes=16)
+        self.gsv_model = resnet18()
 
         model_file = 'resnet18_places365.pth.tar'
         if not os.access(model_file, os.W_OK):
@@ -33,7 +35,7 @@ class MyModel(nn.Module):
         state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
         self.gsv_model.load_state_dict(state_dict, strict=False)
 
-        self.fc = nn.Linear(16 * 4, 16)
+        self.fc = nn.Linear(512 * 4, 16)
         self.fc.apply(weights_init)
         self.gsv_model.fc.apply(weights_init)
        

@@ -3,9 +3,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 
-__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
-           'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
-           'wide_resnet50_2', 'wide_resnet101_2']
+__all__ = ['ResNet', 'resnet18', 'resnet50']
 
 
 model_urls = {
@@ -148,7 +146,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        # self.fc = nn.Linear(512 * block.expansion, num_classes)
         
         # convf1 = nn.Conv2d(512 * block.expansion, 512, kernel_size=3, stride=1, padding=1,bias=False)
         # bnf1 = nn.BatchNorm2d(512,eps=1e-05,momentum=0.1,affine=True,track_running_stats=True)
@@ -212,7 +210,7 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        x = self.fc(x)
+        # x = self.fc(x)
 
         # x = self.layer(5)
 
