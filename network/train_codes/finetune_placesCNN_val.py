@@ -149,20 +149,25 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # JUNCTIONS or GAPS
+    data_dir = 'data/hymenoptera_data' # JUNCTIONS or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    valdir = os.path.join(data_dir, 'val')
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(traindir, transforms.Compose(
-            transform
+        datasets.ImageFolder(traindir, transforms.Compose([
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize
+        ]           
         )),
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
-            transform
+            [transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize]
         )),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
@@ -228,6 +233,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
     # switch to train mode
     model.train()
 
+    # check gradients
+    # for param in model.parameters():
+    #     print(param.requires_grad)
+
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
         # measure data loading time
@@ -241,6 +250,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # compute output
         output = model(input_var)
         loss = criterion(output, target_var)
+
+        # check gradients
+        # print(output.requires_grad)
+        # print(loss.requires_grad)
 
         # measure accuracy and record loss
         prec1 = accuracy(output.data, target, topk=(1, ))
@@ -303,6 +316,10 @@ def validate(val_loader, model, criterion, epoch):
     # switch to evaluate mode
     model.eval()
 
+    # check gradients
+    # for param in model.parameters():
+    #     print(param.requires_grad)
+
     # define a confusion_matrix
     confusion_matrix = meter.ConfusionMeter(args.num_classes)
 
@@ -316,6 +333,10 @@ def validate(val_loader, model, criterion, epoch):
         output = model(input_var)
         loss = criterion(output, target_var)
 
+        # check gradients
+        # print(output.requires_grad)
+        # print(loss.requires_grad)
+        
         confusion_matrix.add(output.squeeze(),target.long())
 
         # measure accuracy and record loss
