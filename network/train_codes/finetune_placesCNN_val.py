@@ -106,14 +106,17 @@ def main():
             state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
+            model.classifier[6].apply(weights_init)
         if args.arch is "resnet18" or "resnet50":      
             state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             transform = [transforms.ToTensor(),normalize]
+            model.fc.apply(weights_init)
         if args.arch is "densenet161":
             state_dict = {str.replace(k,'classifier.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'classifier.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             transform = [transforms.ToTensor(),normalize]
+            model.classifier.apply(weights_init)
        
         model.load_state_dict(state_dict, strict=False)  
 
@@ -122,11 +125,13 @@ def main():
             model = models.googlenet(pretrained=args.pretrained)
             num_ftrs = model.fc.in_features
             model.fc = nn.Linear(num_ftrs,args.num_classes)
+            model.fc.apply(weights_init)
             transform = [transforms.ToTensor(),normalize]
         if args.arch is "vgg":
             model = models.vgg11_bn(pretrained=args.pretrained)
             num_ftrs = model.classifier[6].in_features
             model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+            model.classifier[6].apply(weights_init)
             transform = [transforms.ToTensor(),normalize]
 
     print(model)
@@ -213,6 +218,10 @@ def main():
                 'best_loss': best_loss
             }, is_acc, is_prec, is_rec, is_F1, is_loss, args.arch.lower())     
 
+def weights_init(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.kaiming_uniform_(m.weight)
+        m.bias.data.fill_(0.0)
        
 def train(train_loader, model, criterion, optimizer, epoch):
     batch_time = AverageMeter()
