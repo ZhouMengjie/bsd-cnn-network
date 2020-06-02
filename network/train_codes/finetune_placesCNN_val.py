@@ -151,7 +151,7 @@ def main():
     # Data loading code
     data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'val')
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
 
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose(
