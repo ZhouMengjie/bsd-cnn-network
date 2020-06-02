@@ -106,8 +106,8 @@ def main():
             state_dict = {str.replace(k,'classifier.6.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'classifier.6.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             transform = [transforms.Resize(227),transforms.ToTensor(),normalize]
-            model.classifier[6].apply(weights_init)
-        if args.arch is "resnet18" or "resnet50":      
+            # model.classifier[6].apply(weights_init)
+        if args.arch in ["resnet18","resnet50"]:      
             state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             transform = [transforms.ToTensor(),normalize]
