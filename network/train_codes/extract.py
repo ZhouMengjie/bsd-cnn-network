@@ -50,7 +50,7 @@ def main():
     cfg.parse_args()
 
     # load data
-    area = 'wallstreet5k'
+    area = 'unionsquare5k'
     _, test_loader = load_test_dataset(cfg, area)
 
     # load model
@@ -84,7 +84,7 @@ def main():
     # evaluate on validation set
     features = validate(test_loader, model, criterion, features)
 
-    scipy.io.savemat('ws_features.mat', mdict={'features': features})
+    scipy.io.savemat('uq_features.mat', mdict={'features': features})
     # scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
