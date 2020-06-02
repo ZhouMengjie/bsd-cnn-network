@@ -50,7 +50,7 @@ def main():
     cfg.parse_args()
 
     # load data
-    area = 'hudsonriver5k'
+    area = 'wallstreet5k'
     _, test_loader = load_test_dataset(cfg, area)
 
     # load model
@@ -84,7 +84,7 @@ def main():
     # evaluate on validation set
     features = validate(test_loader, model, criterion, features)
 
-    scipy.io.savemat('hd_features.mat', mdict={'features': features})
+    scipy.io.savemat('ws_features.mat', mdict={'features': features})
     # scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
@@ -118,7 +118,7 @@ def validate(val_loader, model, criterion, features):
         _, pred_tensor = torch.max(output, 1)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
         features[i] = preds  
-        print(preds)
+        # print(preds)
 
         # measure accuracy and record loss
         loss = criterion(output, target)
