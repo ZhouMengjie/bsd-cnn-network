@@ -62,7 +62,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use imagenet pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_true',
+parser.add_argument('--resume', dest='resume', action='store_false',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -136,17 +136,17 @@ def main():
 
     print(model)
 
-    # if args.resume:
-    #     model_file = 'net5_latest.pth.tar'
-    #     # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
-    #     checkpoint = torch.load(model_file)
-    #     args.start_epoch = checkpoint['epoch']
-    #     # best_prec = checkpoint['best_prec']
-    #     # best_loss = checkpoint['best_loss']
-    #     # best_acc = checkpoint['best_acc']
-    #     # best_rec = checkpoint['best_rec']
-    #     # best_F1 = checkpoint['best_F1']
-    #     model.load_state_dict(checkpoint['state_dict'])        
+    if args.resume:
+        model_file = 'model_junction_alexnet/alexnet_accuracy.pth.tar'
+        # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
+        checkpoint = torch.load(model_file)
+        args.start_epoch = checkpoint['epoch']
+        best_prec = checkpoint['best_prec']
+        best_loss = checkpoint['best_loss']
+        best_acc = checkpoint['best_acc']
+        best_rec = checkpoint['best_rec']
+        best_F1 = checkpoint['best_F1']
+        model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPU!")
