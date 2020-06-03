@@ -65,7 +65,7 @@ parser.add_argument('--dataset',default='places365',help='which dataset to train
 args = parser.parse_args()
 
 # Data loading code
-data_dir = 'data/JUNCTIONS'
+data_dir = 'data/combined'
 subarea = 'hudsonriver5k'
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                 std=[0.229, 0.224, 0.225])
@@ -102,14 +102,13 @@ img_paths = image_datasets[subarea].imgs
 # out = torchvision.utils.make_grid(inputs)
 # imshow(out, title=[class_names[x] for x in targets])
 
-
 for i, (input, target) in enumerate(image_datasets[subarea]):
     out = torchvision.utils.make_grid(input)
-    # print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
+    print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
     # print(img_paths[i][0])
     # print(input.size(0))
-    print(target)
+    # print(target)
     # imshow(out, title=[class_names[x] for x in target]) 
-    imshow(out, title=[class_names[target]])   
+    # imshow(out, title=[class_names[target]])   
 
 
