@@ -11,9 +11,10 @@ from transforms import ToTensor, Normalize
 import matplotlib.pyplot as plt
 
 config = """
-previsualizeData: False
+previsualizeData: true
 batchSize : 32
 workers : 4
+seed: 396
 """
 
 class Locations(Dataset):
@@ -30,16 +31,18 @@ class Locations(Dataset):
         if dataset_type == 'train':
             self.csvFile = os.path.join('csv', 'train.csv')
             self.frame = pd.read_csv(self.csvFile, names=names) # Nodes in dataframe
-            # self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe
+            self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe
         elif dataset_type == 'val':
             self.datasetName = 'hudsonriver5k'
             self.csvFile = os.path.join('csv', 'hudsonriver5k.csv')
             self.frame = pd.read_csv(self.csvFile, names=names) # Nodes in dataframe
-            # self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe       
+            self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe       
         else:
             self.datasetName = datasetName
             self.csvFile = os.path.join('csv', datasetName  + '.csv')
             self.frame = pd.read_csv(self.csvFile, names=names) # Nodes in dataframe
+            # self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe       
+
 
         self.cfg = cfg
         self.dataset_type = dataset_type
@@ -195,6 +198,6 @@ if __name__ == "__main__":
     cfg.parse_args()
 
     area = 'hudsonriver5k'
-    # dataset, loader = load_test_dataset(cfg,area)
-    dataset, loader = load_datasets(cfg)
+    dataset, loader = load_test_dataset(cfg,area)
+    # dataset, loader = load_datasets(cfg)
     print('finish and check please')

@@ -65,7 +65,7 @@ parser.add_argument('--dataset',default='places365',help='which dataset to train
 args = parser.parse_args()
 
 # Data loading code
-data_dir = 'data/combined'
+data_dir = 'data/JUNCTIONS'
 subarea = 'hudsonriver5k'
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                 std=[0.229, 0.224, 0.225])
@@ -85,7 +85,7 @@ image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in [subarea]}
 train_loader = {x: torch.utils.data.DataLoader(image_datasets[x], 
-                        batch_size=args.batch_size, shuffle=True,
+                        batch_size=args.batch_size, shuffle=False,
                         num_workers=args.workers, pin_memory=True)
               for x in [subarea]}
 dataset_sizes = {x: len(image_datasets[x]) for x in [subarea]}
@@ -96,19 +96,19 @@ img_paths = image_datasets[subarea].imgs
 
 
 # Get a batch of training data
-# inputs, targets = next(iter(train_loader['train']))
-# print(inputs.size(0))
-# # Make a grid from batch
-# out = torchvision.utils.make_grid(inputs)
-# imshow(out, title=[class_names[x] for x in targets])
+inputs, targets = next(iter(train_loader['hudsonriver5k']))
+print(inputs.size(0))
+# Make a grid from batch
+out = torchvision.utils.make_grid(inputs)
+imshow(out, title=[class_names[x] for x in targets])
 
-for i, (input, target) in enumerate(image_datasets[subarea]):
-    out = torchvision.utils.make_grid(input)
-    print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
-    # print(img_paths[i][0])
-    # print(input.size(0))
-    # print(target)
-    # imshow(out, title=[class_names[x] for x in target]) 
-    # imshow(out, title=[class_names[target]])   
+# for i, (input, target) in enumerate(image_datasets[subarea]):
+#     out = torchvision.utils.make_grid(input)
+#     print(img_paths[0+i*4],'\n',img_paths[1+4*i],'\n',img_paths[2+4*i],'\n',img_paths[3+4*i])
+#     # print(img_paths[i][0])
+#     # print(input.size(0))
+#     # print(target)
+#     # imshow(out, title=[class_names[x] for x in target]) 
+#     # imshow(out, title=[class_names[target]])   
 
 

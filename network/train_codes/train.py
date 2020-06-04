@@ -18,10 +18,12 @@ batchSize : 128
 workers : 4
 lr : 3e-4
 start_epoch: 0
-epochs: 90
+epochs: 20
 print_freq: 10
 arch: resnet18
 check_interval: 500
+num_classes: 4
+seed: 396
 """
 
 class _CustomDataParallel(nn.DataParallel):
