@@ -60,7 +60,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float,
+parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -82,7 +82,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_imporved/jc')
+writer = SummaryWriter('runs/resnet18_improved/jc')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -114,7 +114,7 @@ def main():
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict, strict=False)  
     else:
-        model_file = 'model_junction/resnet18_recall.pth.tar'
+        model_file = 'model_junction/resnet18_accuracy.pth.tar'
         checkpoint = torch.load(model_file)
         args.start_epoch = 0 #checkpoint['epoch']
         best_prec = checkpoint['best_prec']
@@ -160,7 +160,7 @@ def main():
     # optimizer = torch.optim.SGD(model.parameters(), args.lr,
     #                             momentum=args.momentum,
     #                             weight_decay=args.weight_decay)
-    optimizer = torch.optim.Adam(model.parameters(),lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
 
     # set tf logger for tensorboard
     for epoch in range(args.start_epoch, args.epochs):   
