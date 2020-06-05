@@ -134,7 +134,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(traindir, transforms.Compose([
             transforms.ColorJitter(brightness=0.5),
-            transforms.RandomHorizontalFlip(),
+            transforms.RandomHorizontalFlip(p=0.5),
             transforms.ToTensor(),
             normalize,
         ])),
