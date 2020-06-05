@@ -6,6 +6,7 @@ imporve the overfitting problem
 3. Decrease the learning rate
 4. Smaller model size
 5. Decrease the batch size
+6. Model Enembles
 '''
 
 
@@ -72,7 +73,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use imagenet pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_false',
+parser.add_argument('--resume', dest='resume', action='store_true',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -95,6 +96,11 @@ best_rec = 0
 best_loss = 100
 best_F1 = 0
 
+def weights_init(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.kaiming_uniform_(m.weight)
+        m.bias.data.fill_(0.0)
+
 def main():
     global args, device, writer, best_prec, best_loss, best_acc, best_rec, best_F1
     args = parser.parse_args()
@@ -112,7 +118,11 @@ def main():
             os.system('wget ' + weight_url)
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # gpu to cpu
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict, strict=False)  
+        state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
+        state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}      
+        model.load_state_dict(state_dict, strict=False) 
+        model.fc.apply(weights_init)   
+
     else:
         model_file = 'model_junction/resnet18_accuracy.pth.tar'
         checkpoint = torch.load(model_file)
