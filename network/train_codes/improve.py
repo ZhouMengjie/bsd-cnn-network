@@ -325,11 +325,6 @@ def validate(val_loader, model, criterion, epoch):
         prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1[0], input.size(0))
-
-    print('Epoch: [{0}]\t'
-        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-        'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-        epoch, loss=losses, top1=top1))
     
     writer.add_scalar('validation loss', losses.avg, epoch)
     writer.add_scalar('validation accuracy', top1.avg, epoch)
@@ -342,6 +337,13 @@ def validate(val_loader, model, criterion, epoch):
     
     writer.add_scalar('validation precision', precision, epoch)
     writer.add_scalar('validation recall', recall, epoch)
+
+    print('Epoch: [{0}]\t'
+        'Loss {loss.avg:.2f} \t'
+        'Prec@1 {acc:.2f} \t'
+        'Recall {recall:.2f}\t'
+        'Precision {precision:.2f}'.format(
+        epoch, loss=losses, acc=acc, recall=recall, precision=precision))    
 
     return acc, precision, recall, F1, losses.avg
 
