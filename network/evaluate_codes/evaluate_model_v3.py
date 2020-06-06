@@ -68,12 +68,12 @@ else:
 def main():
     global args
     args = parser.parse_args()
-    # print(args)
+    print(args)
 
     # Data loading code
     data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
-    main_directory = 'model_junction/'
+    main_directory = 'model_junction_resnet18/'
     # ROC_names = 'ROC_jc_uq.png'
     # PR_names = 'PR_jc_uq.png'
 
@@ -102,6 +102,7 @@ def main():
 
     if not args.pretrained:
         model = models.__dict__[args.arch](num_classes=args.num_classes)
+        # print(model) 
         checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
         state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
