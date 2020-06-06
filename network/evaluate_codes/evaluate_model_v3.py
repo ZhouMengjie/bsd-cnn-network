@@ -71,7 +71,7 @@ def main():
     # print(args)
 
     # Data loading code
-    data_dir = 'data/GAPS' # JUNCTIONS or GAPS
+    data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
     valdir = os.path.join(data_dir, 'hudsonriver5k')
     main_directory = 'model_junction_resnet18/'
     # ROC_names = 'ROC_jc_uq.png'
