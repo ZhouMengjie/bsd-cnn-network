@@ -130,7 +130,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)
-        target = Label.to(device,dtype=torch.int32)
+        target = Label.to(device,dtype=torch.double)
 
                 
         # zero the parameter gradients
@@ -201,7 +201,7 @@ def validate(val_loader, model, criterion, epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)  
-        target = Label.to(device,dtype=torch.int32)
+        target = Label.to(device,dtype=torch.double)
 
         # compute output
         output = model.forward(Yf, Yr, Yb, Yl)
