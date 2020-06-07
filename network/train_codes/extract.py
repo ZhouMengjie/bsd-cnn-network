@@ -19,12 +19,13 @@ config = """
 previsualizeData: False
 batchSize : 1
 workers : 4
-lr : 3e-4
 start_epoch: 0
-epochs: 90
+epochs: 20
 print_freq: 10
 arch: resnet18
 check_interval: 500
+num_classes: 4
+seed: 396
 mode: test
 """
 
@@ -50,14 +51,14 @@ def main():
     cfg.parse_args()
 
     # load data
-    area = 'unionsquare5k'
+    area = 'hudsonriver5k'
     _, test_loader = load_test_dataset(cfg, area)
-    file_name = 'uq_features,mat'
+    file_name = 'uq_features.mat'
 
     # load model
     model = MyModel(cfg) # design own model
 
-    model_file = 'model_combined/resnet18_accuracy.pth.tar'
+    model_file = 'model_combined_v2/resnet18_loss.pth.tar'
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -72,16 +73,13 @@ def main():
         print("Let's use ", torch.cuda.device_count(), "GPUs!") 
         model = _CustomDataParallel(model)
 
-    # if torch.cuda.device_count() > 1:
-    #     print("Let's use", torch.cuda.device_count(), "GPU!")
-    #     model = nn.DataParallel(model)
 
     model.to(device)
-    criterion = nn.CrossEntropyLoss().cuda()  
-
+    # criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.BCELoss().cuda()
+  
     # panoids = [None] * len(test_loader)
-    features = [None] * len(test_loader)
-    criterion = nn.CrossEntropyLoss()        
+    features = [None] * len(test_loader)  
     # evaluate on validation set
     features = validate(test_loader, model, criterion, features)
 
@@ -90,15 +88,15 @@ def main():
 def validate(val_loader, model, criterion, features):
     batch_time = AverageMeter()    
     losses = AverageMeter()
-    top1 = AverageMeter()
+    # top1 = AverageMeter()
 
     # switch to evaluate mode
     model.eval()
 
     end = time.time()
     for i, sample in enumerate(val_loader):        
-        Yf, Yl, Yr, Yb = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        Label = sample['label'] 
+        Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
+        label = sample['label'] 
         
         Yf = Yf.to(device)
         Yf = Yf.view(-1,3,224,224)
@@ -108,22 +106,23 @@ def validate(val_loader, model, criterion, features):
         Yr = Yr.view(-1,3,224,224)                
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
-        target = Label.to(device,dtype=torch.int64).view(-1)  
+        target = label.to(device)
 
         # compute output
-        output = model.forward(Yf, Yl, Yb, Yr)
+        output = model.forward(Yf, Yr, Yb, Yl)
+        m = nn.Sigmoid()
+        s = m(output)
+        loss = criterion(m(output).double(), target.double())
 
         # convert output probabilities to predicted class
         _, pred_tensor = torch.max(output, 1)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
         features[i] = preds  
         # print(preds)
-
-        # measure accuracy and record loss
-        loss = criterion(output, target)
-        prec1 = accuracy(output.data, target, topk=(1, ))
+        
+        # prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), target.size(0))
-        top1.update(prec1[0], target.size(0))
+        # top1.update(prec1[0], target.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -132,10 +131,8 @@ def validate(val_loader, model, criterion, features):
         if i % cfg.print_freq == 0:
             print('Test: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   top1=top1))
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
+                   i, len(val_loader), batch_time=batch_time, loss=losses))
 
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))

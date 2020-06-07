@@ -23,6 +23,7 @@ arch: resnet18
 check_interval: 500
 num_classes: 4
 seed: 396
+mode: train
 """
 
 class _CustomDataParallel(nn.DataParallel):
