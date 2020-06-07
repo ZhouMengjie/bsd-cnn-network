@@ -16,8 +16,6 @@ config = """
 previsualizeData: False
 batchSize : 128
 workers : 4
-lr : 3e-4
-weight_decay: 1e-4
 start_epoch: 0
 epochs: 20
 print_freq: 10
@@ -75,7 +73,7 @@ def main():
     model.to(device)
     # criterion = nn.CrossEntropyLoss().cuda()  
     criterion = nn.BCELoss().cuda()
-    optimizer = torch.optim.Adam(model.parameters(),lr=cfg.lr,weight_decay=cfg.weight_decay) # default:1e-3
+    optimizer = torch.optim.Adam(model.parameters(),lr=3e-4,weight_decay=1e-4) # default:1e-3
 
 
 
