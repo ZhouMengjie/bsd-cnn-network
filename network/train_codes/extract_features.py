@@ -76,7 +76,7 @@ def main():
     # load model
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
-    # model_file = 'model_junction_resnet18/resnet18_accuracy.pth.tar'
+    # model_file = 'model_junction_resnet18/resnet18_recall.pth.tar'
     model_file = 'model_gap_resnet18_v3/resnet18_recall.pth.tar'
 
     
@@ -115,7 +115,7 @@ def main():
     else:
         transform = [transforms.ToTensor(),normalize]                              
 
-    sub_area = 'wallstreet5k'            
+    sub_area = 'unionsquare5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
@@ -142,8 +142,8 @@ def main():
     # scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
     # scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
-    scipy.io.savemat('ws_gaps_features.mat', mdict={'features': features})
-    scipy.io.savemat('ws_gaps_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
+    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 
