@@ -42,6 +42,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchnet.meter as meter
 from tensorboardX import SummaryWriter
+from Resnet_v2 import resnet18
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -104,6 +105,7 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
     model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # model = resnet18(num_classes=args.num_classes) # smaller model
     
     # load the pre-trained weights
     if not args.resume:
@@ -160,7 +162,7 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda()  
     # optimizer = torch.optim.SGD(model.parameters(), args.lr,
     #                             momentum=args.momentum,

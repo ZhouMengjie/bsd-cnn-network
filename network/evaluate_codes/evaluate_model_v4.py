@@ -160,7 +160,7 @@ def main():
 
     print(len(val_loader))
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = GHMC(bins = 30, momentum = 0.75).to(device)
 
     # load model

@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
+import torch.nn.functional as F
 import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
@@ -75,35 +76,11 @@ def main():
 
     # load model
     classes = ('junctions', 'non_junctions')
-    # classes = ('gaps', 'non_gaps')
-    model_file = 'model_junction/resnet18_accuracy.pth.tar'
-    # model_file = 'model_gap/resnet18_accuracy.pth.tar'
-    
-    if not args.pretrained:
-        model = models.__dict__[args.arch](num_classes=args.num_classes)
-        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
-    else:
-        if args.arch is "googlenet":  
-            model = models.googlenet(pretrained=args.pretrained)
-            num_ftrs = model.fc.in_features
-            model.fc = nn.Linear(num_ftrs,args.num_classes)
-        else:
-            model = models.vgg11_bn(pretrained=args.pretrained)
-            num_ftrs = model.classifier[6].in_features
-            model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
-            
-        checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
-        state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
-
-    # print(model) 
-
-    if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPU!")
-        model = nn.DataParallel(model)
-    model = model.to(device)
+    # classes = ('gaps', 'non_gaps')  
+    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    main_directory = 'model_junction'
+    file_name1 = 'hd_junctions_features.mat' 
+    file_name2 = 'hd_junctions_ids_labels.mat'
 
     # Data loading code
     data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
@@ -125,21 +102,89 @@ def main():
 
     print(len(val_loader))
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     data_transforms = {sub_area: transforms.Compose([transforms.ToTensor(),normalize,]),}
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                     for x in [sub_area]}  
     img_paths = image_datasets[sub_area].imgs
 
-    panoids = [None] * len(val_loader)
-    features = [None] * len(val_loader)
     criterion = nn.CrossEntropyLoss()
-    features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
 
-    
-    scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
-    scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
+
+    # load model parameters
+    model_file = main_directory + 'resnet18_accuracy.pth.tar'
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+    panoids = [None] * len(val_loader)
+    features_acc = [None] * len(val_loader)
+    features_acc, _ = validate(val_loader, model, criterion, classes, features_acc, img_paths, panoids)
+   
+    # load model parameters
+    model_file = main_directory + 'resnet18_precision.pth.tar'
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+    features_prec = [None] * len(val_loader)   
+    features_prec, _ = validate(val_loader, model, criterion, classes, features_prec, img_paths, panoids)
+
+    # load model parameters
+    model_file = main_directory + 'resnet18_recall.pth.tar'
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+    features_rec = [None] * len(val_loader) 
+
+    features_rec, _ = validate(val_loader, model, criterion, classes, features_rec, img_paths, panoids)
+
+    # load model parameters
+    model_file = main_directory + 'resnet18_F1.pth.tar'
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+    features_F1 = [None] * len(val_loader) 
+    features_F1, _ = validate(val_loader, model, criterion, classes, features_F1, img_paths, panoids)
+
+    # load model parameters
+    model_file = main_directory + 'resnet18_loss.pth.tar'
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+    features_loss = [None] * len(val_loader) 
+    features_loss, panoids = validate(val_loader, model, criterion, classes, features_loss, img_paths, panoids)
+
+    features = [None] * len(val_loader) 
+    features = (features_acc + features_prec + features_rec + features_loss + features_F1) / 5
+
+    for i in range(len(val_loader)):
+        output = (features_acc[i] + features_prec[i] + features_rec[i] + features_loss[i] + features_F1[i])/5
+        _, pred_tensor = torch.max(output, 1)
+        preds = np.squeeze(pred_tensor.cpu().numpy()) 
+        features[i] = preds 
+  
+    scipy.io.savemat(file_name1, mdict={'features': features})
+    scipy.io.savemat(file_name2, mdict={'panoids': panoids})
 
     # scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
     # scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
@@ -147,14 +192,14 @@ def main():
 
 
 def validate(val_loader, model, criterion, classes, features, img_paths, panoids):
-    batch_time = AverageMeter()
+    # batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
 
     # switch to evaluate mode
     model.eval()
 
-    end = time.time()
+    # end = time.time()
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)
@@ -164,14 +209,18 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         # compute output
         output = model(input_var)
 
+        # convert output to softmax
+        s = F.softmax(output, dim=1)
+
         # convert output probabilities to predicted class
-        _, pred_tensor = torch.max(output, 1)
-        preds = np.squeeze(pred_tensor.cpu().numpy()) 
-        features[i] = preds  
+        # _, pred_tensor = torch.max(output, 1)
+        # preds = np.squeeze(pred_tensor.cpu().numpy()) 
+        # features[i] = preds  
+        features[i] = s
         re_str = img_paths[i][0]   
         result = re.findall('[^/]+',re_str)
         panoids[i] = result[4]
-        # print(panoids[i])
+        print(panoids[i])
         # pred_lable = classes[preds]
         # print(preds)
         # print(pred_lable)
@@ -183,16 +232,16 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         top1.update(prec1[0], input.size(0))
 
         # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
+        # batch_time.update(time.time() - end)
+        # end = time.time()
 
-        if i % args.print_freq == 0:
-            print('Test: [{0}/{1}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   top1=top1))
+        # if i % args.print_freq == 0:
+        #     print('Test: [{0}/{1}]\t'
+        #           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+        #           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+        #           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+        #            i, len(val_loader), batch_time=batch_time, loss=losses,
+        #            top1=top1))
 
     print(' * Prec@1 {top1.avg:.3f}'
           .format(top1=top1))

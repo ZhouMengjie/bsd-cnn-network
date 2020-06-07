@@ -78,6 +78,7 @@ def main():
     classes = ('gaps', 'non_gaps')
     # model_file = 'model_junction/resnet18_accuracy.pth.tar'
     model_file = 'model_gap/resnet18_accuracy.pth.tar'
+
     
     if not args.pretrained:
         model = models.__dict__[args.arch](num_classes=args.num_classes)
@@ -125,7 +126,7 @@ def main():
 
     print(len(val_loader))
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     data_transforms = {sub_area: transforms.Compose([transforms.ToTensor(),normalize,]),}
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])

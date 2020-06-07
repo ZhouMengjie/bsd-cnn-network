@@ -73,7 +73,7 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
               
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss()
 
     # load alexnet model

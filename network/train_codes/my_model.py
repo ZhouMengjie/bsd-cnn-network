@@ -24,7 +24,7 @@ class MyModel(nn.Module):
         # Load gsv_model
         # self.gsv_model = models.__dict__['resnet18'](num_classes=16)
         self.gsv_model = resnet18()
-        self.fc = nn.Linear(512 * 4, 16)
+        self.fc = nn.Linear(512 * 4, cfg.num_classes)
 
         if cfg.mode == 'train':
             model_file = 'resnet18_places365.pth.tar'
@@ -39,13 +39,13 @@ class MyModel(nn.Module):
             self.fc.apply(weights_init)
             # self.gsv_model.fc.apply(weights_init)
        
-    def forward(self, Yf, Yl, Yr, Yb):
+    def forward(self, Yf, Yr, Yb, Yl):
         # Fordward pass for gsvs
         Yf = self.gsv_model(Yf)
-        Yl = self.gsv_model(Yl)    
         Yr = self.gsv_model(Yr)    
-        Yb = self.gsv_model(Yb)     
-        Y = torch.cat((Yf,Yl, Yr, Yb), dim=1)
+        Yb = self.gsv_model(Yb)    
+        Yl = self.gsv_model(Yl)     
+        Y = torch.cat((Yf,Yr,Yb,Yl), dim=1)
         out = self.fc(Y)  
 
         return out

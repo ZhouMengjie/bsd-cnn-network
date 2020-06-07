@@ -219,7 +219,7 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
 
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = GHMC(bins = 30, momentum = 0.75).to(device)
     optimizer = torch.optim.Adam(model.parameters())
 

@@ -29,7 +29,7 @@ class Locations(Dataset):
         names = ["pano_id", "gsv_lat", "gsv_lon", "gsv_yaw", "front", "right", "back", "left", "label", "city"]
         
         if dataset_type == 'train':
-            self.csvFile = os.path.join('csv', 'train.csv')
+            self.csvFile = os.path.join('csv', 'hudsonriver5k.csv')
             self.frame = pd.read_csv(self.csvFile, names=names) # Nodes in dataframe
             self.frame = self.frame.sample(frac=1, random_state=cfg.seed).reset_index(drop=True) # Shuffle dataframe
         elif dataset_type == 'val':
@@ -85,10 +85,11 @@ class Locations(Dataset):
 
 
         sample['y0'] = cv2.imread(filename_front) / 255.0
-        sample['y1'] = cv2.imread(filename_left) / 255.0
+        sample['y1'] = cv2.imread(filename_right) / 255.0
         sample['y2'] = cv2.imread(filename_back) / 255.0
-        sample['y3'] = cv2.imread(filename_right) / 255.0
-        sample['label'] = row['label']
+        sample['y3'] = cv2.imread(filename_left) / 255.0
+        # sample['label'] = row['label']
+        sample['label'] = [front, right, back, left]
         sample['id'] = pano_id
 
         if self.transforms:
@@ -124,7 +125,7 @@ def load_datasets(cfg):
     train_transforms = transforms.Compose([ToTensor(), Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])])
     val_transforms = transforms.Compose([ToTensor(), Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])])
     
-    train_dataset = Locations(cfg, transforms=train_transforms, dataset_type='train',datasetName='train')
+    train_dataset = Locations(cfg, transforms=train_transforms, dataset_type='train',datasetName='hudsonriver5k')
     val_dataset = Locations(cfg, transforms=val_transforms, dataset_type='val',datasetName='hudsonriver5k')
 
     train_loader = torch.utils.data.DataLoader(

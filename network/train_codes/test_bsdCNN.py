@@ -103,7 +103,7 @@ def main():
         num_workers=args.workers, pin_memory=True)
 
     print(len(val_loader))
-    # define loss function (criterion) and pptimizer
+    # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss()
     validate(val_loader, model, criterion)
 

@@ -52,6 +52,7 @@ def main():
     # load data
     area = 'unionsquare5k'
     _, test_loader = load_test_dataset(cfg, area)
+    file_name = 'uq_features,mat'
 
     # load model
     model = MyModel(cfg) # design own model
@@ -84,9 +85,7 @@ def main():
     # evaluate on validation set
     features = validate(test_loader, model, criterion, features)
 
-    scipy.io.savemat('uq_features.mat', mdict={'features': features})
-    # scipy.io.savemat('hd_gaps_ids_labels.mat', mdict={'panoids': panoids})
-    
+    scipy.io.savemat(file_name, mdict={'features': features})
 
 def validate(val_loader, model, criterion, features):
     batch_time = AverageMeter()    

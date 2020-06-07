@@ -14,7 +14,7 @@ from tensorboardX import SummaryWriter
 
 config = """
 previsualizeData: False
-batchSize : 128
+batchSize : 4
 workers : 4
 lr : 3e-4
 start_epoch: 0
@@ -72,7 +72,8 @@ def main():
     #     model = nn.DataParallel(model)
 
     model.to(device)
-    criterion = nn.CrossEntropyLoss().cuda()  
+    # criterion = nn.CrossEntropyLoss().cuda()  
+    criterion = nn.BCELoss().cuda()
     optimizer = torch.optim.Adam(model.parameters()) # default:1e-3
 
 
@@ -117,8 +118,8 @@ def train(train_loader,model,criterion,optimizer,epoch):
         data_time.update(time.time() - end)
 
         # All in GPU                    
-        Yf, Yl, Yb, Yr = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        Label = sample['label'] #[batch, 10]
+        Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
+        target = sample['label'] #[batch, 10]
                     
         # tiles to gpu and reshape
         Yf = Yf.to(device)
@@ -129,15 +130,17 @@ def train(train_loader,model,criterion,optimizer,epoch):
         Yr = Yr.view(-1,3,224,224)                
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
-        target = Label.to(device,dtype=torch.int64).view(-1)
+        # target = Label.to(device,dtype=torch.int64).view(-1)
                 
         # zero the parameter gradients
         optimizer.zero_grad()
 
         # forward
         # Fordward pass for tiles
-        output = model.forward(Yf, Yl, Yb, Yr)
-        loss = criterion(output, target)
+        output = model.forward(Yf, Yr, Yb, Yl)
+        m = nn.Sigmoid()    
+        # s = m(output)
+        loss = criterion(m(output), target)
 
         # backward + optimize only if in training phase
         loss.backward()
@@ -148,9 +151,9 @@ def train(train_loader,model,criterion,optimizer,epoch):
         optimizer.step()
 
         # statistics
-        prec1 = accuracy(output.data, target, topk=(1, ))
+        # prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), target.size(0)) #input.size(0) = batch_size
-        top1.update(prec1[0], target.size(0))
+        # top1.update(prec1[0], target.size(0))
             
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -166,7 +169,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
                 data_time=data_time, loss=losses, top1=top1))
         t_step = epoch*len(train_loader) + i         
         writer.add_scalar('traning loss', losses.avg, t_step)
-        writer.add_scalar('traning accuracy', top1.avg, t_step) 
+        # writer.add_scalar('traning accuracy', top1.avg, t_step) 
 
         if t_step % cfg.check_interval == 0:
             save_checkpoint({
