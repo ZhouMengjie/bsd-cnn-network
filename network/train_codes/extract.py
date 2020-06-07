@@ -53,7 +53,7 @@ def main():
     # load data
     area = 'hudsonriver5k'
     _, test_loader = load_test_dataset(cfg, area)
-    file_name = 'uq_features.mat'
+    file_name = 'hd_features.mat'
 
     # load model
     model = MyModel(cfg) # design own model
@@ -111,15 +111,15 @@ def validate(val_loader, model, criterion, features):
         # compute output
         output = model.forward(Yf, Yr, Yb, Yl)
         m = nn.Sigmoid()
-        s = m(output)
-        loss = criterion(m(output).double(), target.double())
+        prob = m(output) # label 1
+        loss = criterion(prob.double(), target.double())
 
         # convert output probabilities to predicted class
-        _, pred_tensor = torch.max(output, 1)
+        pred_tensor = torch.ge(prob,0.5)
         preds = np.squeeze(pred_tensor.cpu().numpy()) 
         features[i] = preds  
         # print(preds)
-        
+
         # prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), target.size(0))
         # top1.update(prec1[0], target.size(0))

@@ -84,7 +84,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/resnet18_improved/jc')
+writer = SummaryWriter('runs/resnet18_smaller/jc')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -104,8 +104,8 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
-    # model = resnet18(num_classes=args.num_classes) # smaller model
+    # model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = resnet18(num_classes=args.num_classes) # smaller model
     
     # load the pre-trained weights
     if not args.resume:
@@ -121,7 +121,7 @@ def main():
         model.fc.apply(weights_init)   
 
     else:
-        model_file = 'model_junction/resnet18_accuracy.pth.tar'
+        # model_file = 'model_junction/resnet18_accuracy.pth.tar'
         checkpoint = torch.load(model_file)
         args.start_epoch = 0 #checkpoint['epoch']
         best_prec = checkpoint['best_prec']
