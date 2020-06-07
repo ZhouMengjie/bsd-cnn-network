@@ -72,7 +72,7 @@ def main():
 
     model.to(device)
     # criterion = nn.CrossEntropyLoss().cuda()  
-    criterion = nn.BCELoss().cuda()
+    criterion = nn.BCELoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(),lr=3e-4,weight_decay=1e-4) # default:1e-3
 
 
