@@ -118,7 +118,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
 
         # All in GPU                    
         Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        Label = sample['label'] #[batch, 10]
+        target = sample['label'] #[batch, 10]
                     
         # tiles to gpu and reshape
         Yf = Yf.to(device)
@@ -130,7 +130,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)
-        target = Label.to(device,dtype=torch.double)
+        # target = Label.to(device,dtype=torch.double)
 
                 
         # zero the parameter gradients
@@ -141,7 +141,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
         output = model.forward(Yf, Yr, Yb, Yl)
         m = nn.Sigmoid()    
         # s = m(output)
-        loss = criterion(m(output), target)
+        loss = criterion(m(output).double(), target.double())
 
         # backward + optimize only if in training phase
         loss.backward()
@@ -190,7 +190,7 @@ def validate(val_loader, model, criterion, epoch):
 
     for i, sample in enumerate(val_loader):        
         Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        Label = sample['label'] 
+        target = sample['label'] 
         
         Yf = Yf.to(device)
         Yf = Yf.view(-1,3,224,224)
@@ -201,12 +201,12 @@ def validate(val_loader, model, criterion, epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)  
-        target = Label.to(device,dtype=torch.double)
+        # target = Label.to(device,dtype=torch.double)
 
         # compute output
         output = model.forward(Yf, Yr, Yb, Yl)
         m = nn.Sigmoid()
-        loss = criterion(m(output), target)
+        loss = criterion(m(output).double(), target.double())
 
         # measure accuracy and record loss
         # prec1 = accuracy(output.data, target, topk=(1, ))
