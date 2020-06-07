@@ -76,8 +76,8 @@ def main():
     # load model
     # classes = ('junctions', 'non_junctions')
     classes = ('gaps', 'non_gaps')
-    # model_file = 'model_junction/resnet18_accuracy.pth.tar'
-    model_file = 'model_gap/resnet18_accuracy.pth.tar'
+    # model_file = 'model_junction_resnet18/resnet18_accuracy.pth.tar'
+    model_file = 'model_gap_resnet18_v3/resnet18_accuracy.pth.tar'
 
     
     if not args.pretrained:

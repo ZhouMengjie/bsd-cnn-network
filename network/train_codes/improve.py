@@ -4,7 +4,7 @@ imporve the overfitting problem
 1. Add the Data Augmentation
 2. Optimizer: add L2 regularzation (weight decay)
 3. Decrease the learning rate
-4. Smaller model size
+4. Smaller model size (potential)
 5. Decrease the batch size
 6. Model Enembles
 '''
