@@ -108,7 +108,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    top1 = AverageMeter()
+    # top1 = AverageMeter()
     # switch to train mode
     model.train()
                 
@@ -164,10 +164,9 @@ def train(train_loader,model,criterion,optimizer,epoch):
             print('Epoch: [{0}][{1}/{2}]\t'
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1))
+                data_time=data_time, loss=losses))
         t_step = epoch*len(train_loader) + i         
         writer.add_scalar('traning loss', losses.avg, t_step)
         # writer.add_scalar('traning accuracy', top1.avg, t_step) 
@@ -184,14 +183,14 @@ def train(train_loader,model,criterion,optimizer,epoch):
 
 def validate(val_loader, model, criterion, epoch):
     losses = AverageMeter()
-    top1 = AverageMeter()
+    # top1 = AverageMeter()
 
     # switch to evaluate mode
     model.eval()
 
     for i, sample in enumerate(val_loader):        
-        Yf, Yl, Yr, Yb = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        Label = sample['label'] 
+        Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
+        target = sample['label'] 
         
         Yf = Yf.to(device)
         Yf = Yf.view(-1,3,224,224)
@@ -201,26 +200,27 @@ def validate(val_loader, model, criterion, epoch):
         Yr = Yr.view(-1,3,224,224)                
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
-        target = Label.to(device,dtype=torch.int64).view(-1)  
+        # target = Label.to(device,dtype=torch.int64).view(-1)  
 
         # compute output
-        output = model.forward(Yf, Yl, Yb, Yr)
-        loss = criterion(output, target)
+        output = model.forward(Yf, Yr, Yb, Yl)
+        m = nn.Sigmoid()
+        loss = criterion(m(output), target)
 
         # measure accuracy and record loss
-        prec1 = accuracy(output.data, target, topk=(1, ))
+        # prec1 = accuracy(output.data, target, topk=(1, ))
         losses.update(loss.item(), target.size(0))
-        top1.update(prec1[0], target.size(0))
+        # top1.update(prec1[0], target.size(0))
 
     print('Epoch: [{0}]\t'
-        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-        'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-        epoch, loss=losses, top1=top1))
+        'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
+        epoch, loss=losses))
     
     writer.add_scalar('validation loss', losses.avg, epoch)
-    writer.add_scalar('validation accuracy', top1.avg, epoch)
+    # writer.add_scalar('validation accuracy', top1.avg, epoch)
+    acc = 0
 
-    return top1.avg, losses.avg  
+    return acc, losses.avg  
 
 
 def save_checkpoint(state, is_acc, is_loss, filename='checkpoint.pth.tar'):
