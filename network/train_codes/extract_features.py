@@ -74,10 +74,10 @@ def main():
     # print(args)
 
     # load model
-    # classes = ('junctions', 'non_junctions')
-    classes = ('gaps', 'non_gaps')
-    # model_file = 'model_junction_resnet18/resnet18_recall.pth.tar'
-    model_file = 'model_gap_resnet18_v3/resnet18_recall.pth.tar'
+    classes = ('junctions', 'non_junctions')
+    # classes = ('gaps', 'non_gaps')
+    model_file = 'model_junction_resnet18/resnet18_recall.pth.tar'
+    # model_file = 'model_gap_resnet18_v3/resnet18_recall.pth.tar'
 
     
     if not args.pretrained:
@@ -107,7 +107,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/GAPS' # JUNCTIONS or GAPS
+    data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225]) 
     if args.arch is "alexnet":  
@@ -115,7 +115,7 @@ def main():
     else:
         transform = [transforms.ToTensor(),normalize]                              
 
-    sub_area = 'unionsquare5k'            
+    sub_area = 'hudsonriver5k'            
     valdir = os.path.join(data_dir, sub_area)
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose(
@@ -139,11 +139,11 @@ def main():
     features, panoids = validate(val_loader, model, criterion, classes, features, img_paths, panoids)
 
     
-    # scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
-    # scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
+    scipy.io.savemat('hd_junctions_features.mat', mdict={'features': features})
+    scipy.io.savemat('hd_junctions_ids_labels.mat', mdict={'panoids': panoids})
 
-    scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
-    scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
+    # scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
+    # scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
     
 
 
