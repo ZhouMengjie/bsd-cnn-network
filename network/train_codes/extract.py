@@ -51,9 +51,9 @@ def main():
     cfg.parse_args()
 
     # load data
-    area = 'wallstreet5k'
+    area = 'unionsquare5k'
     _, test_loader = load_test_dataset(cfg, area)
-    file_name = 'ws_features.mat'
+    file_name = 'uq_features.mat'
 
     # load model
     model = MyModel(cfg) # design own model
