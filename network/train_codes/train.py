@@ -72,7 +72,7 @@ def main():
 
     model.to(device)
     # criterion = nn.CrossEntropyLoss().cuda()  
-    criterion = nn.BCELoss().to(device)
+    criterion = nn.BCELoss().cuda()
     optimizer = torch.optim.Adam(model.parameters(),lr=3e-4,weight_decay=1e-4) # default:1e-3
 
 
@@ -118,7 +118,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
 
         # All in GPU                    
         Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        target = sample['label'] #[batch, 10]
+        label = sample['label'] #[batch, 10]
                     
         # tiles to gpu and reshape
         Yf = Yf.to(device)
@@ -130,7 +130,7 @@ def train(train_loader,model,criterion,optimizer,epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)
-        # target = Label.to(device,dtype=torch.double)
+        target = label.to(device)
 
                 
         # zero the parameter gradients
@@ -190,7 +190,7 @@ def validate(val_loader, model, criterion, epoch):
 
     for i, sample in enumerate(val_loader):        
         Yf, Yr, Yb, Yl = sample['y0'], sample['y1'], sample['y2'], sample['y3'] #[batch,1,3,224,224]
-        target = sample['label'] 
+        label = sample['label'] 
         
         Yf = Yf.to(device)
         Yf = Yf.view(-1,3,224,224)
@@ -201,7 +201,7 @@ def validate(val_loader, model, criterion, epoch):
         Yb = Yb.to(device)
         Yb = Yb.view(-1,3,224,224)                
         # target = Label.to(device,dtype=torch.int64).view(-1)  
-        # target = Label.to(device,dtype=torch.double)
+        target = label.to(device)
 
         # compute output
         output = model.forward(Yf, Yr, Yb, Yl)
