@@ -134,8 +134,8 @@ def validate(val_loader, model, criterion, features):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                    i, len(val_loader), batch_time=batch_time, loss=losses))
 
-    print(' * Prec@1 {top1.avg:.3f}'
-          .format(top1=top1))
+    # print(' * Prec@1 {top1.avg:.3f}'
+    #       .format(top1=top1))
     
     return features  
 
