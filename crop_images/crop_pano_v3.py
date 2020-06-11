@@ -1,3 +1,4 @@
+# crop images and split the dataset (multi-thread version)
 import numpy as np
 import os, sys
 import cv2

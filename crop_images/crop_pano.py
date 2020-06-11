@@ -1,3 +1,4 @@
+# only crop images with one thread
 import numpy as np
 import os, sys
 import cv2

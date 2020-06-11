@@ -4,7 +4,35 @@ import torch.nn.functional as F
 import os 
 from torchvision import models
 import sys
-from Resnet import resnet18,resnet50
+from Resnet import resnet18
+
+class MLP(nn.Module):
+    def __init__(self, cfg):
+        super(MLP, self).__init__
+        self.fc1 = nn.Linear(512 * cfg.num_classes ,512)
+        self.fc2 = nn.Linear(512, cfg.num_classes)
+
+        self.relu = nn.ReLU(inplace=True)
+
+        self.bn1 = nn.BatchNorm1d(num_features=512 * cfg.num_classes)
+        self.bn2 = nn.BatchNorm1d(num_features=512)
+        self.bn3 = nn.BatchNorm1d(num_features=cfg.num_classes)
+
+        self.drop = nn.Dropout(0.5)
+
+    def forward(self,y):
+        out = self.bn1(y)
+        out = self.relu(out)
+        # out = self.drop(out) 
+        out = self.fc1(out)
+        out = self.bn2(out)        
+        out = self.relu(out)
+        #out = self.drop(out) 
+        out = self.fc2(out)
+
+        return out
+
+
 
 class MyModel(nn.Module):
     def __init__(self, cfg): 
@@ -19,12 +47,10 @@ class MyModel(nn.Module):
                 torch.nn.init.kaiming_uniform_(m.weight)
                 m.bias.data.fill_(0.0)
 
-        self.cfg = cfg
-
         # Load gsv_model
         # self.gsv_model = models.__dict__['resnet18'](num_classes=16)
         self.gsv_model = resnet18()
-        self.fc = nn.Linear(512 * 4, cfg.num_classes)
+        self.classifier = MLP(cfg)
 
         if cfg.mode == 'train':
             model_file = 'resnet18_places365.pth.tar'
@@ -44,8 +70,8 @@ class MyModel(nn.Module):
         Yf = self.gsv_model(Yf)
         Yr = self.gsv_model(Yr)    
         Yb = self.gsv_model(Yb)    
-        Yl = self.gsv_model(Yl)     
+        Yl = self.gsv_model(Yl)   
         Y = torch.cat((Yf,Yr,Yb,Yl), dim=1)
-        out = self.fc(Y)  
+        out = MLP(Y) 
 
         return out

@@ -78,7 +78,7 @@ def main():
     classes = ('junctions', 'non_junctions')
     # classes = ('gaps', 'non_gaps')  
     model = models.__dict__[args.arch](num_classes=args.num_classes)
-    main_directory = 'model_junction'
+    main_directory = 'model_junction/'
     file_name1 = 'hd_junctions_features.mat' 
     file_name2 = 'hd_junctions_ids_labels.mat'
 
@@ -220,7 +220,7 @@ def validate(val_loader, model, criterion, classes, features, img_paths, panoids
         re_str = img_paths[i][0]   
         result = re.findall('[^/]+',re_str)
         panoids[i] = result[4]
-        print(panoids[i])
+        # print(panoids[i])
         # pred_lable = classes[preds]
         # print(preds)
         # print(pred_lable)
