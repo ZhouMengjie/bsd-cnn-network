@@ -8,7 +8,7 @@ from Resnet import resnet18
 
 class MLP(nn.Module):
     def __init__(self, cfg):
-        super(MLP, self).__init__
+        super(MLP, self).__init__()
         self.fc1 = nn.Linear(512 * cfg.num_classes ,512)
         self.fc2 = nn.Linear(512, cfg.num_classes)
 
@@ -62,7 +62,7 @@ class MyModel(nn.Module):
             state_dict = {str.replace(k,'fc.bias' ,'fc1.bias'): v for k,v in state_dict.items()}
             state_dict = {str.replace(k,'fc.weight' ,'fc1.weight'): v for k,v in state_dict.items()}
             self.gsv_model.load_state_dict(state_dict, strict=False)
-            self.fc.apply(weights_init)
+            self.classifier.apply(weights_init)
             # self.gsv_model.fc.apply(weights_init)
        
     def forward(self, Yf, Yr, Yb, Yl):
