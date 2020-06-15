@@ -14,7 +14,7 @@ from tensorboardX import SummaryWriter
 
 config = """
 previsualizeData: False
-batchSize : 128
+batchSize : 64
 workers : 4
 start_epoch: 0
 epochs: 20
