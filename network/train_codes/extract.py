@@ -58,7 +58,7 @@ def main():
     # load model
     model = MyModel(cfg) # design own model
 
-    model_file = 'model_combined_v2/resnet18_loss.pth.tar'
+    model_file = 'model_combined_v3/resnet18_loss.pth.tar'
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
