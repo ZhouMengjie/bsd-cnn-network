@@ -52,7 +52,7 @@ def main():
     cfg.parse_args()
 
     # load data
-    # _, loader = load_datasets(cfg)
+    _, loader = load_datasets(cfg)
 
     # load model
     model = MyModel(cfg) # design own model
