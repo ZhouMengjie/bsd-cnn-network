@@ -40,7 +40,7 @@ class _CustomDataParallel(nn.DataParallel):
 def main():
     global cfg, device, writer, best_loss, best_acc
 
-    writer = SummaryWriter('runs/resnet18_combined')
+    writer = SummaryWriter('runs/resnet18_combined_bce')
     best_acc = 0
     best_loss = 100
 
