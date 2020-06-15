@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/alexnet50/jc')
+writer = SummaryWriter('runs/alexnet50/bd')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -137,7 +137,7 @@ def main():
     print(model)
 
     if args.resume:
-        model_file = 'model_junction_alexnet/alexnet_accuracy.pth.tar'
+        model_file = 'model_gap_alexnet/alexnet_accuracy.pth.tar'
         # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
         checkpoint = torch.load(model_file)
         args.start_epoch = checkpoint['epoch']
@@ -154,7 +154,7 @@ def main():
     model = model.to(device)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # JUNCTIONS or GAPS
+    data_dir = 'data/GAPS' # JUNCTIONS or GAPS
     traindir = os.path.join(data_dir, 'train')
     valdir = os.path.join(data_dir, 'hudsonriver5k')
 
