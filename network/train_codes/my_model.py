@@ -72,6 +72,6 @@ class MyModel(nn.Module):
         Yb = self.gsv_model(Yb)    
         Yl = self.gsv_model(Yl)   
         Y = torch.cat((Yf,Yr,Yb,Yl), dim=1)
-        out = MLP(Y) 
+        out = self.classifier(Y) 
 
         return out
