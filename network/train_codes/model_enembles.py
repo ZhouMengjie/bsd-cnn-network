@@ -1,8 +1,3 @@
-# this code is modified from the pytorch example code: https://github.com/pytorch/examples/blob/master/imagenet/main.py
-# after the model is trained, you might use convert_model.py to remove the data parallel module to make the model as standalone weight.
-#
-# Bolei Zhou
-
 import argparse
 import os
 import shutil
@@ -186,9 +181,6 @@ def main():
     scipy.io.savemat(file_name1, mdict={'features': features})
     scipy.io.savemat(file_name2, mdict={'panoids': panoids})
 
-    # scipy.io.savemat('uq_gaps_features.mat', mdict={'features': features})
-    # scipy.io.savemat('uq_gaps_ids_labels.mat', mdict={'panoids': panoids})
-    
 
 
 def validate(val_loader, model, criterion, classes, features, img_paths, panoids):
