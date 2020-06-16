@@ -119,6 +119,7 @@ def main():
     panoids = [None] * len(val_loader)
     features_acc = [None] * len(val_loader)
     features_acc, _ = validate(val_loader, model, criterion, classes, features_acc, img_paths, panoids)
+    torch.cuda.empty_cache()
    
     # load model parameters
     model_file = main_directory + 'resnet18_precision.pth.tar'
@@ -131,6 +132,7 @@ def main():
     model = model.to(device)
     features_prec = [None] * len(val_loader)   
     features_prec, _ = validate(val_loader, model, criterion, classes, features_prec, img_paths, panoids)
+    torch.cuda.empty_cache()
 
     # load model parameters
     model_file = main_directory + 'resnet18_recall.pth.tar'
@@ -144,6 +146,7 @@ def main():
     features_rec = [None] * len(val_loader) 
 
     features_rec, _ = validate(val_loader, model, criterion, classes, features_rec, img_paths, panoids)
+    torch.cuda.empty_cache()
 
     # load model parameters
     model_file = main_directory + 'resnet18_F1.pth.tar'
@@ -156,6 +159,7 @@ def main():
     model = model.to(device)
     features_F1 = [None] * len(val_loader) 
     features_F1, _ = validate(val_loader, model, criterion, classes, features_F1, img_paths, panoids)
+    torch.cuda.empty_cache()
 
     # load model parameters
     model_file = main_directory + 'resnet18_loss.pth.tar'
@@ -168,6 +172,7 @@ def main():
     model = model.to(device)
     features_loss = [None] * len(val_loader) 
     features_loss, panoids = validate(val_loader, model, criterion, classes, features_loss, img_paths, panoids)
+    torch.cuda.empty_cache()
 
     features = [None] * len(val_loader) 
     features = (features_acc + features_prec + features_rec + features_loss + features_F1) / 5
