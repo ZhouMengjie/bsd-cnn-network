@@ -44,7 +44,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=40, type=int, metavar='N',
+parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -62,7 +62,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use imagenet pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_true',
+parser.add_argument('--resume', dest='resume', action='store_false',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
@@ -137,15 +137,26 @@ def main():
     print(model)
 
     if args.resume:
-        model_file = 'model_gap_alexnet/alexnet_accuracy.pth.tar'
+        model_file = 'model_gap_alexnet_v2/checkpoint.pth.tar'
+        model_file_acc = 'model_gap_alexnet_v2/alexnet_accuracy.pth.tar'
+        model_file_pre = 'model_gap_alexnet_v2/alexnet_precision.pth.tar'
+        model_file_rec = 'model_gap_alexnet_v2/alexnet_recall.pth.tar'
+        model_file_F1 = 'model_gap_alexnet_v2/alexnet_F1.pth.tar'  
+        model_file_loss = 'model_gap_alexnet_v2/alexnet_loss.pth.tar'                      
         # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
         checkpoint = torch.load(model_file)
+        checkpoint_acc = torch.load(model_file_acc)
+        checkpoint_pre = torch.load(model_file_pre)
+        checkpoint_rec = torch.load(model_file_rec)
+        checkpoint_F1 = torch.load(model_file_F1)
+        checkpoint_loss = torch.load(model_file_loss)
+
         args.start_epoch = checkpoint['epoch']
-        best_prec = checkpoint['best_prec']
-        best_loss = checkpoint['best_loss']
-        best_acc = checkpoint['best_acc']
-        best_rec = checkpoint['best_rec']
-        best_F1 = checkpoint['best_F1']
+        best_prec = checkpoint_pre['best_prec']
+        best_loss = checkpoint_loss['best_loss']
+        best_acc = checkpoint_acc['best_acc']
+        best_rec = checkpoint_rec['best_rec']
+        best_F1 = checkpoint_F1['best_F1']
         model.load_state_dict(checkpoint['state_dict'])        
              
     if torch.cuda.device_count() > 1:
