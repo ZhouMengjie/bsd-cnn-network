@@ -112,7 +112,7 @@ def main():
     # print(args)
     
     # load model
-    main_directory = 'model_gap_alexnet_v2'
+    main_directory = 'model_gap_alexnet_v2/'
     output_dir = 'Grad_CAM/alexnet/nbd'
     data_dir = 'data/nbd' # or GAPS
     subarea = 'val'
