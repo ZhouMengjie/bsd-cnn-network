@@ -44,7 +44,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=50, type=int, metavar='N',
+parser.add_argument('--epochs', default=40, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -62,7 +62,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use imagenet pre-trained model')
-parser.add_argument('--resume', dest='resume', action='store_false',
+parser.add_argument('--resume', dest='resume', action='store_true',
                     help='use checkpoint model')
 parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
