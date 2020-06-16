@@ -137,7 +137,7 @@ def main():
     print(model)
 
     if args.resume:
-        model_file = 'model_gap_alexnet_v2/checkpoint.pth.tar'
+        model_file = 'model_gap_alexnet_v2/checkpoint_latest.pth.tar'
         model_file_acc = 'model_gap_alexnet_v2/alexnet_accuracy.pth.tar'
         model_file_pre = 'model_gap_alexnet_v2/alexnet_precision.pth.tar'
         model_file_rec = 'model_gap_alexnet_v2/alexnet_recall.pth.tar'
