@@ -77,7 +77,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # load alexnet model
-    model_file = 'model_gap_alexnet/' + 'alexnet_accuracy.pth.tar'
+    model_file = 'model_gap_alexnet_v2/' + 'alexnet_recall.pth.tar'
     
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
