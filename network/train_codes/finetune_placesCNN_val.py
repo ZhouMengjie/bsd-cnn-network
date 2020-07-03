@@ -38,7 +38,7 @@ model_names = sorted(name for name in models.__dict__
 
 
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='alexnet',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -72,7 +72,7 @@ parser.add_argument('--num_save', default=0, type=int, metavar='N',
 parser.add_argument('--num_checkpoints', default=5, type=int, metavar='N',
                     help='number of saved checkpoints')
 
-writer = SummaryWriter('runs/alexnet50/bd')
+writer = SummaryWriter('runs/resnet18/bd')
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
     torch.backends.cudnn.benchmark = True
@@ -137,12 +137,12 @@ def main():
     print(model)
 
     if args.resume:
-        model_file = 'model_gap_alexnet_v2/checkpoint_latest.pth.tar'
-        model_file_acc = 'model_gap_alexnet_v2/alexnet_accuracy.pth.tar'
-        model_file_pre = 'model_gap_alexnet_v2/alexnet_precision.pth.tar'
-        model_file_rec = 'model_gap_alexnet_v2/alexnet_recall.pth.tar'
-        model_file_F1 = 'model_gap_alexnet_v2/alexnet_F1.pth.tar'  
-        model_file_loss = 'model_gap_alexnet_v2/alexnet_loss.pth.tar'                      
+        model_file = 'model_gap/checkpoint_latest.pth.tar'
+        model_file_acc = 'model_gap/resnet18_accuracy.pth.tar'
+        model_file_pre = 'model_gap/resnet18_precision.pth.tar'
+        model_file_rec = 'model_gap/resnet18_recall.pth.tar'
+        model_file_F1 = 'model_gap/resnet18_F1.pth.tar'
+        model_file_loss = 'model_gap/resnet18_loss.pth.tar'
         # checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
         checkpoint = torch.load(model_file)
         checkpoint_acc = torch.load(model_file_acc)
@@ -301,17 +301,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
         #                 plot_classes_preds(output, input, target, classes),
         #                 global_step=epoch * len(train_loader) + i)
         
-        # if t_step % args.check_interval == 0:
-        #     args.num_save += 1
-        #     save_checkpoint({
-        #         'epoch': epoch,
-        #         'arch': args.arch,
-        #         'state_dict': model.state_dict(),
-        #         'best_acc': losses.avg,
-        #         'best_loss': top1.avg
-        #     }, is_acc, is_prec, is_rec, is_F1, is_loss,'net'+ str(args.num_save))
-        #     if args.num_save == 5:
-        #         args.num_save = 0
         if t_step % args.check_interval == 0:
             save_checkpoint({
                 'epoch': epoch + 1,

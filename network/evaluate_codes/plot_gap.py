@@ -1,4 +1,4 @@
-# evalutate different models with ghmc loss
+# plot roc and pr curve for gap models
 
 import argparse
 import os
@@ -23,88 +23,14 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
-def _expand_binary_labels(labels, label_weights, label_channels):
-    bin_labels = labels.new_full((labels.size(0), label_channels), 0)
-    inds = torch.nonzero(labels >= 1).squeeze()
-    if inds.numel() > 0:
-        bin_labels[inds, labels[inds] - 1] = 1
-    bin_label_weights = label_weights.view(-1, 1).expand(
-        label_weights.size(0), label_channels)
-    return bin_labels, bin_label_weights
-
-
-class GHMC(nn.Module):
-    def __init__(
-            self,
-            bins=10,
-            momentum=0,
-            use_sigmoid=True,
-            loss_weight=1.0):
-        super(GHMC, self).__init__()
-        self.bins = bins
-        self.momentum = momentum
-        self.edges = [float(x) / bins for x in range(bins+1)]
-        self.edges[-1] += 1e-6
-        if momentum > 0:
-            self.acc_sum = [0.0 for _ in range(bins)]
-        self.use_sigmoid = use_sigmoid
-        self.loss_weight = loss_weight
-
-    def forward(self, pred, target, label_weight, *args, **kwargs):
-        """ Args:
-        pred [batch_num, class_num]:
-            The direct prediction of classification fc layer.
-        target [batch_num, class_num]:
-            Binary class target for each sample.
-        label_weight [batch_num, class_num]:
-            the value is 1 if the sample is valid and 0 if ignored.
-        """
-        if not self.use_sigmoid:
-            raise NotImplementedError
-        # the target should be binary class label
-        if pred.dim() != target.dim():
-            target, label_weight = _expand_binary_labels(target, label_weight, pred.size(-1))
-        target, label_weight = target.float(), label_weight.float()
-        edges = self.edges
-        mmt = self.momentum
-        weights = torch.zeros_like(pred)
-
-        # gradient length
-        g = torch.abs(pred.sigmoid().detach() - target)
-
-        valid = label_weight > 0
-        tot = max(valid.float().sum().item(), 1.0)
-        n = 0  # n valid bins
-        for i in range(self.bins):
-            inds = (g >= edges[i]) & (g < edges[i+1]) & valid
-            num_in_bin = inds.sum().item()
-            if num_in_bin > 0:
-                if mmt > 0:
-                    self.acc_sum[i] = mmt * self.acc_sum[i] \
-                        + (1 - mmt) * num_in_bin
-                    weights[inds] = tot / self.acc_sum[i]
-                else:
-                    weights[inds] = tot / num_in_bin
-                n += 1
-        if n > 0:
-            weights = weights / n
-
-        loss = F.binary_cross_entropy_with_logits(
-            pred, target, weights, reduction='sum') / tot
-        return loss * self.loss_weight
-
 parser = argparse.ArgumentParser(description='PyTorch BSD Training')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
-                    help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=16, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--lr', '--learning-rate', default=3e-4, type=float,
                     metavar='LR', help='initial learning rate')
@@ -118,9 +44,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_false',
                     help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_false',
-                    help='use pre-trained model')
-parser.add_argument('--num_classes',default=1, type=int, help='num of class in the model')
+parser.add_argument('--num_classes',default=2, type=int, help='num of class in the model')
 parser.add_argument('--check_interval', default=500, type=int, metavar='N',
                     help='interval of each checkpoint')
 parser.add_argument('--num_save', default=0, type=int, metavar='N',
@@ -138,37 +62,36 @@ else:
 def main():
     global args
     args = parser.parse_args()
-    # print(args)
 
     # Data loading code
-    data_dir = 'data/JUNCTIONS' # or GAPS
-    valdir = os.path.join(data_dir, 'unionsquare5k')
-    main_directory = 'model_junction_loss/'
-    ROC_names = 'ROC_jc_ghmc_uq.png'
-    PR_names = 'PR_jc_ghmc_uq.png'
+    data_dir = 'data/GAPS' # JUNCTIONS or GAPS
+    valdir = os.path.join(data_dir, 'hudsonriver5k')
+    ROC_names = 'ROC_bd.png'
+    PR_names = 'PR_bd.png'
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+              
+    # define loss function (criterion) and optimizer
+    criterion = nn.CrossEntropyLoss()
+
+    # load alexnet model
+    model_file = 'model_gap_alexnet_v2/' + 'alexnet_recall.pth.tar'
+    
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Resize(227),
             transforms.ToTensor(),
-            normalize,
+            normalize
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
-    print(len(val_loader))
-
-    # define loss function (criterion) and optimizer
-    criterion = GHMC(bins = 30, momentum = 0.75).to(device)
-
-    # load model
-    model_file = main_directory + 'resnet18_accuracy.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    model = models.__dict__['alexnet'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict)    
     # print(model) 
 
     if torch.cuda.device_count() > 1:
@@ -176,13 +99,25 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    precision_acc, recall_acc, fpr_acc = validate(val_loader, model, criterion)
+    precision_alexnet, recall_alexnet, fpr_alexnet = validate(val_loader, model, criterion)
     torch.cuda.empty_cache()
 
 
-    # load model
-    model_file = main_directory + 'resnet18_precision.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # load vgg model
+    model_file = 'model_gap_vgg/' + 'vgg_recall.pth.tar'
+
+    val_loader = torch.utils.data.DataLoader(
+        datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.ToTensor(),
+            normalize
+        ])),
+        batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True)   
+
+    model = models.vgg11_bn(pretrained=True)
+    num_ftrs = model.classifier[6].in_features
+    model.classifier[6] = nn.Linear(num_ftrs,args.num_classes)
+
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -193,12 +128,16 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    precision_prec, recall_prec, fpr_prec = validate(val_loader, model, criterion)
+    precision_vgg, recall_vgg, fpr_vgg = validate(val_loader, model, criterion)
     torch.cuda.empty_cache()
 
-    # load model
-    model_file = main_directory +'resnet18_recall.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # load googlenet model
+    model_file = 'model_gap_googlenet/' + 'googlenet_recall.pth.tar'
+
+    model = models.googlenet(pretrained=True)
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs,args.num_classes)
+
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -209,12 +148,13 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    precision_rec, recall_rec, fpr_rec = validate(val_loader, model, criterion)
+    precision_googlenet, recall_googlenet, fpr_googlenet = validate(val_loader, model, criterion)
     torch.cuda.empty_cache()
 
-    # load model
-    model_file = main_directory + 'resnet18_F1.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # load resnet18 model
+    model_file = 'model_gap/' + 'resnet18_recall.pth.tar'
+
+    model = models.__dict__['resnet18'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -225,13 +165,14 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    precision_f1, recall_f1, fpr_f1 = validate(val_loader, model, criterion)
+    precision_resnet18, recall_resnet18, fpr_resnet18 = validate(val_loader, model, criterion)
     torch.cuda.empty_cache()
 
 
-    # load model
-    model_file = main_directory + 'resnet18_loss.pth.tar'
-    model = models.__dict__[args.arch](num_classes=args.num_classes)
+    # load resnet50 model
+    model_file = 'model_gap_resnet50/' + 'resnet50_recall.pth.tar'
+
+    model = models.__dict__['resnet50'](num_classes=args.num_classes)
     checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
@@ -242,17 +183,35 @@ def main():
         model = nn.DataParallel(model)
     model = model.to(device)
 
-    precision_loss, recall_loss, fpr_loss = validate(val_loader, model, criterion)
+    precision_resnet50, recall_resnet50, fpr_resnet50 = validate(val_loader, model, criterion)
+    torch.cuda.empty_cache()
+
+    # load densenet161 model
+    model_file = 'model_gap_densenet161/' + 'densenet161_recall.pth.tar'
+
+    model = models.__dict__['densenet161'](num_classes=args.num_classes)
+    checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage) # load to CPU
+    state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    # print(model) 
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPU!")
+        model = nn.DataParallel(model)
+    model = model.to(device)
+
+    precision_densenet161, recall_densenet161, fpr_densenet161 = validate(val_loader, model, criterion)
     torch.cuda.empty_cache()
 
 
     # plot ROC curve
     plt.figure(figsize=(10,6))
-    plt.plot(fpr_acc,recall_acc,label="Resnet18_Accuracy",linewidth=2)
-    plt.plot(fpr_prec,recall_prec,label="Resnet18_Precision",linewidth=2)
-    plt.plot(fpr_rec,recall_rec,label="Resnet18_Recall",linewidth=2)  
-    plt.plot(fpr_f1,recall_f1,label="Resnet18_F1",linewidth=2)
-    plt.plot(fpr_loss,recall_loss,label="Resnet18_Loss",linewidth=2)
+    plt.plot(fpr_alexnet,recall_alexnet,label="Alexnet",linewidth=2)
+    plt.plot(fpr_vgg,recall_vgg,label="Vgg",linewidth=2)
+    plt.plot(fpr_googlenet,recall_googlenet,label="Googlenet",linewidth=2)  
+    plt.plot(fpr_resnet18,recall_resnet18,label="Resnet18",linewidth=2)
+    plt.plot(fpr_resnet50,recall_resnet50,label="Resnet50",linewidth=2)
+    plt.plot(fpr_densenet161,recall_densenet161,label="Densenet161",linewidth=2)
     plt.xlabel("False Positive Rate",fontsize=16)
     plt.ylabel("True Positive Rate",fontsize=16)
     plt.title("ROC Curve",fontsize=16)
@@ -262,11 +221,12 @@ def main():
 
     # plot P-R curve
     plt.figure(figsize=(10,6))
-    plt.plot(recall_acc,precision_acc,label="Resnet18_Accuracy",linewidth=2)
-    plt.plot(recall_prec,precision_prec,label="Resnet18_Precision",linewidth=2)
-    plt.plot(recall_rec,precision_rec,label="Resnet18_Recall",linewidth=2)
-    plt.plot(recall_f1,precision_f1,label="Resnet18_F1",linewidth=2)  
-    plt.plot(recall_loss,precision_loss,label="Resnet18_Loss",linewidth=2) 
+    plt.plot(recall_alexnet,precision_alexnet,label="Alexnet",linewidth=2)
+    plt.plot(recall_vgg,precision_vgg,label="Vgg",linewidth=2)
+    plt.plot(recall_googlenet,precision_googlenet,label="Googlenet",linewidth=2)
+    plt.plot(recall_resnet18,precision_resnet18,label="Resnet18",linewidth=2)  
+    plt.plot(recall_resnet50,precision_resnet50,label="Resnet50",linewidth=2) 
+    plt.plot(recall_densenet161,precision_densenet161,label="Densenet161",linewidth=2) 
     plt.xlabel("Recall",fontsize=16)
     plt.ylabel("Precision",fontsize=16)
     plt.title("Precision Recall Curve",fontsize=17)
@@ -285,17 +245,17 @@ def validate(val_loader, model, criterion):
     model.eval()
     
     # define a confusion_matrix
-    confusion_matrix_0 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_1 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_2 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_3 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_4 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_5 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_6 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_7 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_8 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_9 = meter.ConfusionMeter(args.num_classes+1)
-    confusion_matrix_10 = meter.ConfusionMeter(args.num_classes+1)
+    confusion_matrix_0 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_1 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_2 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_3 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_4 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_5 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_6 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_7 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_8 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_9 = meter.ConfusionMeter(args.num_classes)
+    confusion_matrix_10 = meter.ConfusionMeter(args.num_classes)
 
     end = time.time()
     cm = []
@@ -312,17 +272,10 @@ def validate(val_loader, model, criterion):
 
         # compute output
         output = model(input_var)
-
-        # transfer out to p = sigmoid(x)
-        pred1 = output.sigmoid().detach() # p(y=1|x)
-        pred0 = 1 - pred1
-        pred = torch.cat((pred0, pred1),dim=1)
-
-        label_weight = torch.ones_like(output)
-        loss = criterion(output,target_var,label_weight)
+        loss = criterion(output, target_var)
 
         # convert output to softmax
-        s = pred
+        s = F.softmax(output, dim=1)
 
         # update confusion matrix
         s_p = torch.sub(s,torch.tensor([0.0]).to(device))
@@ -378,6 +331,17 @@ def validate(val_loader, model, criterion):
         batch_time.update(time.time() - end)
         end = time.time()
 
+        # if i % args.print_freq == 0:
+        #     print('Test: [{0}/{1}]\t'
+        #           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+        #           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+        #           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+        #            i, len(val_loader), batch_time=batch_time, loss=losses,
+        #            top1=top1))
+
+    # print(' * Prec@1 {top1.avg:.3f}\t'
+    #         'Loss {loss.avg:.4f}'
+    #         .format(top1=top1, loss=losses))
     
     cm.append(confusion_matrix_0) 
     cm.append(confusion_matrix_1) 
