@@ -3,14 +3,13 @@
 This work is an implementation of paper "Automated Map Reading: Image Based Localisation in 2-D Maps Using Binary Semantic Descriptors". 
 Please cite in this form when you use these codes.
 
-...
+
 @InProceedings{Panphattarasap2018,
   Title = {Automated map reading: Image based localisation in 2-d maps using binary semantic descriptors},
   Author = {Pilailuck Panphattarasap and Andrew Calway},
   Booktitle = {Proc. {IEEE/RSJ} Int Conf on Intelligent Robots and Systems},
   Year = {2018}
 }
-...
 
 Here is a brief introduction about the codes. 
 
@@ -28,7 +27,7 @@ Here is a brief introduction about the codes.
 
         >> data: GSV images (Junctions and Gaps)
 
-         >> train_codes: including all scripts to train networks and extract BSDs from images.
+        >> train_codes: including all scripts to train networks and extract BSDs from images.
 
         >> evaluate_codes: including all scripts to evaluate models (accuracy, precision, recall, F1, loss) and plot PR/ROC curves.
 
