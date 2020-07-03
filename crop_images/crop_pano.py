@@ -129,7 +129,7 @@ if not os.path.isdir(snaps_directory_gap):
     os.makedirs(snaps_directory_gap)
 
 # Open csv file
-filename = os.path.join(os.getcwd(), 'data', dataset + '.csv')
+filename = os.path.join(os.getcwd(), 'csv', dataset + '.csv')
 names = ["pano_id", "gsv_lat", "gsv_lon", "gsv_yaw", "front", "right", "back", "left", "city"]
 routes = pd.read_csv(filename,names=names)
 
