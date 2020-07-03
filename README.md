@@ -23,7 +23,7 @@ Here is a brief introduction about the codes.
 
 > crop_images : prepare images for training, validation and testing (need to utilize csv files in data/ ).
 
-> network: train, evaluate and visualize BSD-networks 
+> network: train, evaluate and visualize BSD-networks.
 
         >> data: GSV images (Junctions and Gaps)
 
