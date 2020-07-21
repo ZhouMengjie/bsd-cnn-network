@@ -364,7 +364,7 @@ def validate(val_loader, model, criterion):
         cm_value = cm[i].value()
         acc.append((cm_value[0][0]+cm_value[1][1]) / (cm_value.sum()))  
         precision.append(cm_value[0][0] / (cm_value[0][0] + cm_value[1][0]))
-        print(cm_value[0][0] + cm_value[1][0])
+        # print(cm_value[0][0] + cm_value[1][0])
         recall.append(cm_value[0][0] / (cm_value[0][0] + cm_value[0][1]))
         F1.append(2 * (precision[i] * recall[i]) / (precision[i] + recall[i]))
         # tpr = recall fpr = 1 - specificity
