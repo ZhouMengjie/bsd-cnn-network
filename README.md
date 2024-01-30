@@ -1,6 +1,7 @@
 # bsd-cnn-network: fine-tuneing CNN models to get Binary Semantic Descriptors(BSDs) of Google Street View (GSV) images
 
 This work is an implementation of paper "Automated Map Reading: Image Based Localisation in 2-D Maps Using Binary Semantic Descriptors". 
+The codes and features included here are employed as the baseline for conducting a comparative analysis in the paper titled "You Are Here: Geolocation by Embedding Maps and Images."
 Please cite in this form when you use these codes.
 
 
@@ -8,7 +9,15 @@ Please cite in this form when you use these codes.
   Title = {Automated map reading: Image based localisation in 2-d maps using binary semantic descriptors},
   Author = {Pilailuck Panphattarasap and Andrew Calway},
   Booktitle = {Proc. {IEEE/RSJ} Int Conf on Intelligent Robots and Systems},
-  Year = {2018}
+  Year = {2018}}
+
+> @inproceedings{samano2020you,
+  title={You are here: Geolocation by embedding maps and images},
+  author={Samano, Noe and Zhou, Mengjie and Calway, Andrew},
+  booktitle={Computer Vision--ECCV 2020: 16th European Conference, Glasgow, UK, August 23--28, 2020, Proceedings, Part XXIII 16},
+  pages={502--518},
+  year={2020},
+  organization={Springer}
 }
 
 Here is a brief introduction about the codes. 
