@@ -4,7 +4,7 @@ This work is an implementation of paper "Automated Map Reading: Image Based Loca
 Please cite in this form when you use these codes.
 
 
-@InProceedings{Panphattarasap2018,
+> @InProceedings{Panphattarasap2018,
   Title = {Automated map reading: Image based localisation in 2-d maps using binary semantic descriptors},
   Author = {Pilailuck Panphattarasap and Andrew Calway},
   Booktitle = {Proc. {IEEE/RSJ} Int Conf on Intelligent Robots and Systems},
