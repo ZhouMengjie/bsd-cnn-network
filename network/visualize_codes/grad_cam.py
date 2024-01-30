@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-#
-# Author:   Kazuto Nakashima
-# URL:      http://kazuto1011.github.io
-# Created:  2017-05-26
+""" This code is modified from http://kazuto1011.github.io """
 
 from collections import Sequence
 

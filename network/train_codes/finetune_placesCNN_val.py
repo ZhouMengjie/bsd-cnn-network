@@ -1,14 +1,5 @@
 
-'''
- @article{zhou2017places,
-   title={Places: A 10 million Image Database for Scene Recognition},
-   author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
-   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-   year={2017},
-   publisher={IEEE}
-   website={http://places2.csail.mit.edu}
- }
-'''
+""" This code is modified from https://github.com/CSAILVision/places365/blob/master/train_placesCNN.py """
 
 import argparse
 import os
