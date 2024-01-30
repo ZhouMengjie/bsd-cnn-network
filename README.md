@@ -50,4 +50,4 @@ Here is a brief introduction about the codes.
 
         >> feature_maps/Grad_CAM/Occulusion: visualization results.
 
-Please contact me if you have any questions.
+Please contact me (mengjie.zhou@bristol.ac.uk) if you have any questions.
