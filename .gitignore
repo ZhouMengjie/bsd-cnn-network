@@ -8,3 +8,4 @@ network/train_codes/__pycache__/load_data.cpython-37.pyc
 network/resnet18_places365.pth.tar
 network/densenet161_places365.pth.tar
 network/resnet50_places365.pth.tar
+data/值日表.xlsx
